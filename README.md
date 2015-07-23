@@ -1,19 +1,7 @@
-# MOM
+## What is MOM ?
 
-## YALF
+It will be a minimal Lua Framework.
 
-Yet Another Lua Framework
-It's a new try.
-
-## Why this name ?
-
-Lua is basic, like a child.
-I think we need something more adult like a parent (mother or father).
-I think to `mom` or `dad`.
-moonscript start by `mo*` I choose `mom`.
-
-It's short, easy to remember, easy to call (`require "mom"`)
-Search resulsts with `mom.lua` or `lua mom` on github and google show me that nothing seems exists.
 
 ## At the beginning
 
@@ -50,6 +38,21 @@ local i = class.instance(Person) -- better with Person() or Person:new() ?
   i:say_name()
 ```
 
-And it print `Hello, I am MoonScript!`
+And it print `Hello, I am MoonScript!` even it's not the case.
 
+
+## Why this name ?
+
+Lua is basic, like a child.
+I think we need something more adult like a parent (mother or father).
+I think to `mom` or `dad`.
+moonscript start by `mo*` I choose `mom`.
+
+It's short, easy to remember, easy to call (`require "mom"`)
+Search resulsts with `mom.lua` or `lua mom` on github and google show me that nothing seems exists.
+
+
+## License
+
+ * My code will be released under MIT License.
 
