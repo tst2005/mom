@@ -19,7 +19,7 @@ with Person!
   \say_name!
 ```
 
-I can do the same sort of code in lua with the same number of line code, but only with a separated class module.
+I can do the same sort of code in lua with (almost) the same number of lines, but only with a separated class module.
 
 ```
 local class = require "class"
