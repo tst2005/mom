@@ -41,6 +41,7 @@ function class:new(...)
     return c
 end
 
+
 local common = {}
 function common.class(name, t, parent)
     parent = parent or class
@@ -55,4 +56,16 @@ end
 
 common.__BY = "secs"
 
-return setmetatable(common, {__call = function(_, ...) return common.class(...) end})
+function class_mt:__call(name, ...)
+	return self:new(name, ...)
+end
+
+return setmetatable(common, {__call = function(_, name, ...)
+	if type(name) == "string" then -- new class
+		return common.class(name, ...)
+	elseif type(name) == "table" then -- instance
+		return common.instance(name, ...)
+	else
+		error("argument #1 is invalid", 2)
+	end
+end})

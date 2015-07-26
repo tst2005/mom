@@ -1,4 +1,4 @@
-local class = require "class"
+local class = require "class" -- classcommons2
 
 local Thing = class("Thing", {init=function(self)
   self.name = "unknown"
@@ -9,6 +9,6 @@ function Person:say_name()
   print( ("Hello, I am %s!"):format(self.name) )
 end
 
-local i = Person:new()
-  i.name = "MoonScript"
-  i:say_name()
+local p = Person:new() -- or class(Person)
+  p.name = "MoonScript"
+  p:say_name()
