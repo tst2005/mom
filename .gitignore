@@ -1,2 +1,4 @@
 /\.cache\.gws
-/thirdparty
+/thirdparty/git/
+*.tar.gz
+/tmp
