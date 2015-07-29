@@ -1,0 +1,1 @@
+http://love2d.org/wiki/Simple_Educative_Class_System
