@@ -1,4 +1,4 @@
-#!/bin/sh
+
 _=[[
 	for name in luajit lua5.3 lua-5.3 lua5.2 lua-5.2 lua5.1 lua-5.1 lua; do
 		: ${LUA:=$(command -v luajit)}
@@ -7,74 +7,73 @@ _=[[
 	exec "$LUA" "$0" "$@"
 	exit $?
 ]]_=nil
-require("package").preload["gro"]=function(...)local mvi={}
-local g4KV=require"package".loaded;local dT7iYDf4={}
-local L={__newindex=function()end,__tostring=function()return"locked"end,__metatable=assert(dT7iYDf4)}setmetatable(dT7iYDf4,L)
-assert(tostring(dT7iYDf4 =="locked"))local WRH9=true;local function cJoBcud(...)if WRH9 then WRH9=false;rawset(...)return true end
-return false end;local e=true;local B6zKxgVs
-local function O3_X(M7,v3,ihKb)if ihKb==nil then
-return true end
-if e and type(ihKb)=="string"then e=false;B6zKxgVs=ihKb
-return true elseif B6zKxgVs==ihKb then return true end;return false end;local function DVs8kf2w(JGSK)
-return(#JGSK>30)and
-(JGSK:sub(1,20).."... ..."..JGSK:sub(-4,-1))or JGSK end
-local vms5=getmetatable(_G)or{}
-vms5.__newindex=function(rA5U,Uc06,lcBL)
-if Uc06 =="_"and O3_X(_G,Uc06,lcBL)then return end;if g4KV[Uc06]==lcBL then
-io.stderr:write("drop global write of module '"..tostring(Uc06).."'\n")return end;if Uc06 =="arg"then if
-cJoBcud(_G,Uc06,lcBL)then return end end
-error(("global env is read-only. Write of %q"):format(DVs8kf2w(Uc06)),2)end;vms5.__metatable=dT7iYDf4;setmetatable(_G,vms5)if getmetatable(_G)~=
-dT7iYDf4 then
+require("package").preload["gro"]=function(...)local abn5={}
+local AvK=require"package".loaded;local rhVu={}
+local ngzOjWHO={__newindex=function()end,__tostring=function()return"locked"end,__metatable=assert(rhVu)}setmetatable(rhVu,ngzOjWHO)
+assert(tostring(rhVu=="locked"))local dM=true
+local function U(...)if dM then dM=false;rawset(...)return true end;return false end;local _u=true;local aLgiy
+local function mvi(L,WRH9,cJoBcud)if cJoBcud==nil then return true end
+if _u and
+type(cJoBcud)=="string"then _u=false;aLgiy=cJoBcud;return true elseif aLgiy==cJoBcud then return true end;return false end;local function g4KV(e)
+return(#e>30)and
+(e:sub(1,20).."... ..."..e:sub(-4,-1))or e end
+local dT7iYDf4=getmetatable(_G)or{}
+dT7iYDf4.__newindex=function(B6zKxgVs,O3_X,DVs8kf2w)
+if O3_X=="_"and mvi(_G,O3_X,DVs8kf2w)then return end;if AvK[O3_X]==DVs8kf2w then
+io.stderr:write("drop global write of module '"..
+tostring(O3_X).."'\n")return end;if O3_X=="arg"then if
+U(_G,O3_X,DVs8kf2w)then return end end
+error(("global env is read-only. Write of %q"):format(g4KV(O3_X)),2)end;dT7iYDf4.__metatable=rhVu;setmetatable(_G,dT7iYDf4)if
+getmetatable(_G)~=rhVu then
 error("unable to setup global env to read-only",2)end;return{}end;require("gro")
 require("package").preload["strict"]=function(...)
-local DHPxI,dx,RRuSHnxf,mcYOuT=debug.getinfo,error,rawset,rawget;local Rr=getmetatable(_G)
-if Rr==nil then Rr={}setmetatable(_G,Rr)end;Rr.__declared={}local function scRP0()local AI0R2TQ6=DHPxI(3,"S")return
-AI0R2TQ6 and AI0R2TQ6.what or"C"end
-Rr.__newindex=function(yA,XmVolesU,eZ0l3ch)
-if not
-Rr.__declared[XmVolesU]then local W_63_9=scRP0()if W_63_9 ~="main"and W_63_9 ~="C"then
-dx(
-"assignment to undeclared variable '"..XmVolesU.."'",2)end
-Rr.__declared[XmVolesU]=true end;RRuSHnxf(yA,XmVolesU,eZ0l3ch)end
-Rr.__index=function(h9dyA_4T,oh)if not Rr.__declared[oh]and scRP0()~="C"then
-dx("variable '"..oh..
-"' is not declared",2)end
-return mcYOuT(h9dyA_4T,oh)end end;require("strict")
+local vms5,M7,v3,ihKb=debug.getinfo,error,rawset,rawget;local JGSK=getmetatable(_G)
+if JGSK==nil then JGSK={}setmetatable(_G,JGSK)end;JGSK.__declared={}local function rA5U()local Uc06=vms5(3,"S")
+return Uc06 and Uc06.what or"C"end
+JGSK.__newindex=function(lcBL,DHPxI,dx)
+if
+not JGSK.__declared[DHPxI]then local RRuSHnxf=rA5U()if RRuSHnxf~="main"and RRuSHnxf~="C"then
+M7(
+"assignment to undeclared variable '"..DHPxI.."'",2)end
+JGSK.__declared[DHPxI]=true end;v3(lcBL,DHPxI,dx)end
+JGSK.__index=function(mcYOuT,Rr)if not JGSK.__declared[Rr]and rA5U()~="C"then
+M7(
+"variable '"..Rr.."' is not declared",2)end;return ihKb(mcYOuT,Rr)end end;require("strict")
 require("package").preload["i"]=function(...)
-local DZXGTh={}DZXGTh._VERSION="2.0"local Su9Koz={}local Uk7e={}local function KwQCk_G(PEqsd)local iSj
-pcall(function()iSj=require(PEqsd)end)return iSj end
-local function ptZa(iXxD6s)if Su9Koz[iXxD6s]then return
-Su9Koz[iXxD6s]end
-local function oiY(HLXS0Q_)
-if type(HLXS0Q_)~="table"or
-type(HLXS0Q_.common)~="table"or
-not HLXS0Q_.common.class or
-not HLXS0Q_.common.instance then
-assert(type(HLXS0Q_)=="table")
-assert(type(HLXS0Q_.common)=="table")assert(HLXS0Q_.common.class)
-assert(HLXS0Q_.common.instance)return false end;return HLXS0Q_.common end;local FsYIVlkf=oiY(KwQCk_G(iXxD6s.."-featured"))or
-oiY(KwQCk_G(iXxD6s))return FsYIVlkf end;function DZXGTh:need(Kw)return ptZa(Kw)end
-function DZXGTh:requireany(...)local nvaIsNv7=
-type(...)=="table"and...or{...}for vDnoL55,xlAK in ipairs(nvaIsNv7)do
-local zr1y=ptZa(xlAK)if zr1y then return zr1y end end
-error("requireany: no implementation found",2)return false end
-function DZXGTh:register(Hs,jk)
-assert(jk,"register: argument #2 is invalid")assert(jk.class)assert(jk.instance)
-Uk7e[#Uk7e+1]=Hs;Su9Koz[Hs]=jk;return jk end;function DZXGTh:unregister(qzSFyIO)end;function DZXGTh:available()return Uk7e end
-return DZXGTh end
-require("package").preload["secs"]=function(...)local Z65={}function Z65:__index(FT)return
-self.__baseclass[FT]end
-local umyCNfj=setmetatable({__baseclass={}},Z65)
-function umyCNfj:new(...)local YVLXYq={}YVLXYq.__baseclass=self
-setmetatable(YVLXYq,getmetatable(self))if YVLXYq.init then YVLXYq:init(...)end;return YVLXYq end;return umyCNfj end
+local scRP0={}scRP0._VERSION="2.0"local AI0R2TQ6={}local yA={}local function XmVolesU(W_63_9)local h9dyA_4T;pcall(function()
+h9dyA_4T=require(W_63_9)end)
+return h9dyA_4T end
+local function eZ0l3ch(oh)if AI0R2TQ6[oh]then return
+AI0R2TQ6[oh]end
+local function DZXGTh(Uk7e)
+if
+
+type(Uk7e)~="table"or
+type(Uk7e.common)~="table"or not Uk7e.common.class or not Uk7e.common.instance then assert(type(Uk7e)=="table")assert(type(Uk7e.common)==
+"table")
+assert(Uk7e.common.class)assert(Uk7e.common.instance)return false end;return Uk7e.common end
+local Su9Koz=DZXGTh(XmVolesU(oh.."-featured"))or DZXGTh(XmVolesU(oh))return Su9Koz end;function scRP0:need(KwQCk_G)return eZ0l3ch(KwQCk_G)end
+function scRP0:requireany(...)local ptZa=
+type(...)=="table"and...or{...}
+for PEqsd,iSj in
+ipairs(ptZa)do local iXxD6s=eZ0l3ch(iSj)if iXxD6s then return iXxD6s end end;error("requireany: no implementation found",2)
+return false end
+function scRP0:register(oiY,FsYIVlkf)
+assert(FsYIVlkf,"register: argument #2 is invalid")assert(FsYIVlkf.class)
+assert(FsYIVlkf.instance)yA[#yA+1]=oiY;AI0R2TQ6[oiY]=FsYIVlkf;return FsYIVlkf end;function scRP0:unregister(HLXS0Q_)end;function scRP0:available()return yA end;return scRP0 end
+require("package").preload["secs"]=function(...)local Kw={}function Kw:__index(vDnoL55)return
+self.__baseclass[vDnoL55]end
+local nvaIsNv7=setmetatable({__baseclass={}},Kw)
+function nvaIsNv7:new(...)local xlAK={}xlAK.__baseclass=self
+setmetatable(xlAK,getmetatable(self))if xlAK.init then xlAK:init(...)end;return xlAK end;return nvaIsNv7 end
 require("package").preload["secs-featured"]=function(...)
-local bJfct=require"secs"local OhuFpq_N={}
-function OhuFpq_N.class(Dzg,_4O,C)C=C or bJfct;_4O=_4O or{}_4O.__baseclass=C;return
-setmetatable(_4O,getmetatable(C))end;function OhuFpq_N.instance(bJfct,...)return bJfct:new(...)end
-OhuFpq_N.__BY="secs"
-pcall(function()require("i"):register("secs",OhuFpq_N)end)return{common=OhuFpq_N}end
+local zr1y=require"secs"local Hs={}
+function Hs.class(jk,qzSFyIO,Z65)Z65=Z65 or zr1y;qzSFyIO=qzSFyIO or{}
+qzSFyIO.__baseclass=Z65;return setmetatable(qzSFyIO,getmetatable(Z65))end;function Hs.instance(zr1y,...)return zr1y:new(...)end;Hs.__BY="secs"
+pcall(function()
+require("i"):register("secs",Hs)end)return{common=Hs}end
 require("package").preload["middleclass"]=function(...)
-local fLI2zRe={_VERSION='middleclass v3.0.1',_DESCRIPTION='Object Orientation for Lua',_URL='https://github.com/kikito/middleclass',_LICENSE=[[
+local umyCNfj={_VERSION='middleclass v3.0.1',_DESCRIPTION='Object Orientation for Lua',_URL='https://github.com/kikito/middleclass',_LICENSE=[[
     MIT LICENSE
 
     Copyright (c) 2011 Enrique García Cota
@@ -98,72 +97,74 @@ local fLI2zRe={_VERSION='middleclass v3.0.1',_DESCRIPTION='Object Orientation fo
     TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
     SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
   ]]}
-local function _Fr2YU(JD)local u=JD.__instanceDict;u.__index=u;local pzDMZwG=JD.super
-if pzDMZwG then
-local XPoQB=pzDMZwG.static;setmetatable(u,pzDMZwG.__instanceDict)
-setmetatable(JD.static,{__index=function(XxJ,o5sms)return
-u[o5sms]or XPoQB[o5sms]end})else
-setmetatable(JD.static,{__index=function(JQi1jg,wVzn)return u[wVzn]end})end end
-local function Xfn(pE)
-setmetatable(pE,{__tostring=function()return"class "..pE.name end,__index=pE.static,__newindex=pE.__instanceDict,__call=function(RSjapQ,...)return
-RSjapQ:new(...)end})end
-local function UEbsw(QJf,zC)local pfZ3SPy_={name=QJf,super=zC,static={},__mixins={},__instanceDict={}}
-pfZ3SPy_.subclasses=setmetatable({},{__mode="k"})_Fr2YU(pfZ3SPy_)Xfn(pfZ3SPy_)return pfZ3SPy_ end
-local function UlikV(pDNa2ox6,Do6yo7nm)
+local function FT(_Fr2YU)local Xfn=_Fr2YU.__instanceDict;Xfn.__index=Xfn;local U=_Fr2YU.super
+if U then
+local Ebsw=U.static;setmetatable(Xfn,U.__instanceDict)
+setmetatable(_Fr2YU.static,{__index=function(UlikV,JtAjijkG)return
+Xfn[JtAjijkG]or Ebsw[JtAjijkG]end})else
+setmetatable(_Fr2YU.static,{__index=function(s,YAtG_LV3)return Xfn[YAtG_LV3]end})end end
+local function YVLXYq(LfEJbh_)
+setmetatable(LfEJbh_,{__tostring=function()return"class "..LfEJbh_.name end,__index=LfEJbh_.static,__newindex=LfEJbh_.__instanceDict,__call=function(JD,...)return
+JD:new(...)end})end
+local function bJfct(u,pzDMZwG)local XPoQB={name=u,super=pzDMZwG,static={},__mixins={},__instanceDict={}}
+XPoQB.subclasses=setmetatable({},{__mode="k"})FT(XPoQB)YVLXYq(XPoQB)return XPoQB end
+local function OhuFpq_N(XxJ,o5sms)
 return
-function(...)local y06X3k=pDNa2ox6.super[Do6yo7nm]
-assert(type(y06X3k)=='function',
-tostring(pDNa2ox6).." doesn't implement metamethod '"..Do6yo7nm.."'")return y06X3k(...)end end;local function JtAjijkG(ivnJjrA)
-for d3fMjkg,el in ipairs(ivnJjrA.__metamethods)do ivnJjrA[el]=UlikV(ivnJjrA,el)end end
-local function s(Wu_uIt,w)Wu_uIt.initialize=function(sgeP,...)return
-w.initialize(sgeP,...)end end
-local function YAtG_LV3(CM,Qlmlet)
-assert(type(Qlmlet)=='table',"mixin must be a table")
-for _RkGFh6,hw18 in pairs(Qlmlet)do if _RkGFh6 ~="included"and _RkGFh6 ~="static"then
-CM[_RkGFh6]=hw18 end end;if Qlmlet.static then
-for nvCiFt7r,xSebv5Jc in pairs(Qlmlet.static)do CM.static[nvCiFt7r]=xSebv5Jc end end
-if
-type(Qlmlet.included)=="function"then Qlmlet:included(CM)end;CM.__mixins[Qlmlet]=true end;local LfEJbh_=UEbsw("Object",nil)
-LfEJbh_.static.__metamethods={'__add','__call','__concat','__div','__ipairs','__le','__len','__lt','__mod','__mul','__pairs','__pow','__sub','__tostring','__unm'}
-function LfEJbh_.static:allocate()
-assert(type(self)=='table',"Make sure that you are using 'Class:allocate' instead of 'Class.allocate'")return setmetatable({class=self},self.__instanceDict)end;function LfEJbh_.static:new(...)local mMp=self:allocate()
-mMp:initialize(...)return mMp end
-function LfEJbh_.static:subclass(rDtVf)
+function(...)local JQi1jg=XxJ.super[o5sms]
+assert(type(JQi1jg)=='function',tostring(XxJ)..
+" doesn't implement metamethod '"..o5sms.."'")return JQi1jg(...)end end;local function Dzg(wVzn)
+for pE,RSjapQ in ipairs(wVzn.__metamethods)do wVzn[RSjapQ]=OhuFpq_N(wVzn,RSjapQ)end end;local function _4O(QJf,zC)
+QJf.initialize=function(pfZ3SPy_,...)return
+zC.initialize(pfZ3SPy_,...)end end
+local function C(pDNa2ox6,Do6yo7nm)
+assert(type(Do6yo7nm)=='table',"mixin must be a table")
+for y06X3k,ivnJjrA in pairs(Do6yo7nm)do if y06X3k~="included"and y06X3k~="static"then
+pDNa2ox6[y06X3k]=ivnJjrA end end
+if Do6yo7nm.static then for d3fMjkg,el in pairs(Do6yo7nm.static)do
+pDNa2ox6.static[d3fMjkg]=el end end;if type(Do6yo7nm.included)=="function"then
+Do6yo7nm:included(pDNa2ox6)end
+pDNa2ox6.__mixins[Do6yo7nm]=true end;local fLI2zRe=bJfct("Object",nil)
+fLI2zRe.static.__metamethods={'__add','__call','__concat','__div','__ipairs','__le','__len','__lt','__mod','__mul','__pairs','__pow','__sub','__tostring','__unm'}
+function fLI2zRe.static:allocate()
+assert(type(self)=='table',"Make sure that you are using 'Class:allocate' instead of 'Class.allocate'")return setmetatable({class=self},self.__instanceDict)end;function fLI2zRe.static:new(...)local Wu_uIt=self:allocate()
+Wu_uIt:initialize(...)return Wu_uIt end
+function fLI2zRe.static:subclass(w)
 assert(
 type(self)=='table',"Make sure that you are using 'Class:subclass' instead of 'Class.subclass'")
-assert(type(rDtVf)=="string","You must provide a name(string) for your class")local vj=UEbsw(rDtVf,self)JtAjijkG(vj)s(vj,self)
-self.subclasses[vj]=true;self:subclassed(vj)return vj end;function LfEJbh_.static:subclassed(z)end
-function LfEJbh_.static:isSubclassOf(Zg)
+assert(type(w)=="string","You must provide a name(string) for your class")local sgeP=bJfct(w,self)Dzg(sgeP)_4O(sgeP,self)
+self.subclasses[sgeP]=true;self:subclassed(sgeP)return sgeP end;function fLI2zRe.static:subclassed(CM)end
+function fLI2zRe.static:isSubclassOf(Qlmlet)
 return
-type(Zg)==
-'table'and type(self)=='table'and
+
+type(Qlmlet)=='table'and type(self)=='table'and
 type(self.super)=='table'and
-(self.super==Zg or
+(self.super==Qlmlet or
 
-type(self.super.isSubclassOf)=='function'and self.super:isSubclassOf(Zg))end
-function LfEJbh_.static:include(...)
-assert(type(self)=='table',"Make sure you that you are using 'Class:include' instead of 'Class.include'")for ykRppH,WQ6 in ipairs({...})do YAtG_LV3(self,WQ6)end;return self end
-function LfEJbh_.static:includes(y36Aetn)
+type(self.super.isSubclassOf)=='function'and self.super:isSubclassOf(Qlmlet))end
+function fLI2zRe.static:include(...)
+assert(type(self)=='table',"Make sure you that you are using 'Class:include' instead of 'Class.include'")for _RkGFh6,hw18 in ipairs({...})do C(self,hw18)end;return self end
+function fLI2zRe.static:includes(nvCiFt7r)
 return
 
 
-type(y36Aetn)=='table'and type(self)=='table'and type(self.__mixins)=='table'and
-(self.__mixins[y36Aetn]or type(self.super)=='table'and
+type(nvCiFt7r)=='table'and type(self)=='table'and type(self.__mixins)=='table'and
+(self.__mixins[nvCiFt7r]or type(self.super)=='table'and
 type(self.super.includes)=='function'and
-self.super:includes(y36Aetn))end;function LfEJbh_:initialize()end;function LfEJbh_:__tostring()return
+self.super:includes(nvCiFt7r))end;function fLI2zRe:initialize()end;function fLI2zRe:__tostring()return
 "instance of "..tostring(self.class)end
-function LfEJbh_:isInstanceOf(iPL3B4cr)
+function fLI2zRe:isInstanceOf(xSebv5Jc)
 return
 
 type(self)=='table'and type(self.class)=='table'and
-type(iPL3B4cr)=='table'and
-(iPL3B4cr==self.class or
+type(xSebv5Jc)=='table'and
+(xSebv5Jc==self.class or
 
-type(iPL3B4cr.isSubclassOf)=='function'and self.class:isSubclassOf(iPL3B4cr))end
-function fLI2zRe.class(GI2hz6SK,Oh,...)Oh=Oh or LfEJbh_;return Oh:subclass(GI2hz6SK,...)end;fLI2zRe.Object=LfEJbh_
-setmetatable(fLI2zRe,{__call=function(PG,...)return fLI2zRe.class(...)end})return fLI2zRe end
+type(xSebv5Jc.isSubclassOf)=='function'and self.class:isSubclassOf(xSebv5Jc))end;function umyCNfj.class(mMp,rDtVf,...)rDtVf=rDtVf or fLI2zRe
+return rDtVf:subclass(mMp,...)end;umyCNfj.Object=fLI2zRe
+setmetatable(umyCNfj,{__call=function(vj,...)return
+umyCNfj.class(...)end})return umyCNfj end
 require("package").preload["middleclass-featured"]=function(...)
-local n={_VERSION='middleclass v3.0.0',_DESCRIPTION='Object Orientation for Lua',_LICENSE=[[
+local z={_VERSION='middleclass v3.0.0',_DESCRIPTION='Object Orientation for Lua',_LICENSE=[[
     MIT LICENSE
 
     Copyright (c) 2011 Enrique García Cota
@@ -187,314 +188,309 @@ local n={_VERSION='middleclass v3.0.0',_DESCRIPTION='Object Orientation for Lua'
     TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
     SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
   ]]}
-local function O(OO)local y=OO.__instanceDict;y.__index=y;local cR6rJlAl=OO.super
-if cR6rJlAl then
-local M6ilzGJ=cR6rJlAl.static;setmetatable(y,cR6rJlAl.__instanceDict)
-setmetatable(OO.static,{__index=function(iW6CD,wZdg)return
-y[wZdg]or M6ilzGJ[wZdg]end})else
-setmetatable(OO.static,{__index=function(BaX,SJsW11k)return y[SJsW11k]end})end end
-local function N5UjTN(Ki1HJT)
-setmetatable(Ki1HJT,{__tostring=function()return"class "..Ki1HJT.name end,__index=Ki1HJT.static,__newindex=Ki1HJT.__instanceDict,__call=function(wjim8xCV,...)return
-wjim8xCV:new(...)end})end
-local function qLH5(EQLam,qTDt)local v={name=EQLam,super=qTDt,static={},__mixins={},__instanceDict={}}
-v.subclasses=setmetatable({},{__mode="k"})O(v)N5UjTN(v)return v end
-local function tE(Ta,u)
+local function Zg(O)local N5UjTN=O.__instanceDict;N5UjTN.__index=N5UjTN;local qLH5=O.super
+if qLH5 then
+local tE=qLH5.static;setmetatable(N5UjTN,qLH5.__instanceDict)
+setmetatable(O.static,{__index=function(VcV0EuD,pX4gCR)return
+N5UjTN[pX4gCR]or tE[pX4gCR]end})else
+setmetatable(O.static,{__index=function(gad4ZcL,dk)return N5UjTN[dk]end})end end
+local function ykRppH(E)
+setmetatable(E,{__tostring=function()return"class "..E.name end,__index=E.static,__newindex=E.__instanceDict,__call=function(OO,...)
+return OO:new(...)end})end
+local function WQ6(y,cR6rJlAl)
+local M6ilzGJ={name=y,super=cR6rJlAl,static={},__mixins={},__instanceDict={}}M6ilzGJ.subclasses=setmetatable({},{__mode="k"})
+Zg(M6ilzGJ)ykRppH(M6ilzGJ)return M6ilzGJ end
+local function y36Aetn(iW6CD,wZdg)
 return
-function(...)local nArcvQl=Ta.super[u]
-assert(type(nArcvQl)=='function',tostring(Ta)..
-" doesn't implement metamethod '"..u.."'")return nArcvQl(...)end end;local function VcV0EuD(h6Ub7U)
-for Gm,YKA7cU in ipairs(h6Ub7U.__metamethods)do h6Ub7U[YKA7cU]=tE(h6Ub7U,YKA7cU)end end
-local function pX4gCR(mCsewfX,yY)mCsewfX.initialize=function(Xf,...)return
-yY.initialize(Xf,...)end end
-local function gad4ZcL(UlFdiZ7v,UwFeA)
-assert(type(UwFeA)=='table',"mixin must be a table")
-for JQgI,N in pairs(UwFeA)do if JQgI~="included"and JQgI~="static"then
-UlFdiZ7v[JQgI]=N end end
-if UwFeA.static then for fs52REi,PUNkgaiM in pairs(UwFeA.static)do
-UlFdiZ7v.static[fs52REi]=PUNkgaiM end end;if type(UwFeA.included)=="function"then
-UwFeA:included(UlFdiZ7v)end
-UlFdiZ7v.__mixins[UwFeA]=true end;local dk=qLH5("Object",nil)
-dk.static.__metamethods={'__add','__call','__concat','__div','__le','__lt','__mod','__mul','__pow','__sub','__tostring','__unm'}
-function dk.static:allocate()
-assert(type(self)=='table',"Make sure that you are using 'Class:allocate' instead of 'Class.allocate'")return setmetatable({class=self},self.__instanceDict)end;function dk.static:new(...)local s6FbB=self:allocate()s6FbB:initialize(...)return
-s6FbB end
-function dk.static:subclass(X)
+function(...)local BaX=iW6CD.super[wZdg]
+assert(type(BaX)=='function',tostring(iW6CD)..
+" doesn't implement metamethod '"..wZdg.."'")return BaX(...)end end
+local function iPL3B4cr(SJsW11k)for Ki1HJT,wjim8xCV in ipairs(SJsW11k.__metamethods)do
+SJsW11k[wjim8xCV]=y36Aetn(SJsW11k,wjim8xCV)end end;local function GI2hz6SK(E,QLam)
+E.initialize=function(qTDt,...)return QLam.initialize(qTDt,...)end end
+local function Oh(v,Ta)
+assert(type(Ta)=='table',"mixin must be a table")for u,nArcvQl in pairs(Ta)do
+if u~="included"and u~="static"then v[u]=nArcvQl end end;if Ta.static then for h6Ub7U,Gm in pairs(Ta.static)do
+v.static[h6Ub7U]=Gm end end;if
+type(Ta.included)=="function"then Ta:included(v)end
+v.__mixins[Ta]=true end;local PG=WQ6("Object",nil)
+PG.static.__metamethods={'__add','__call','__concat','__div','__le','__lt','__mod','__mul','__pow','__sub','__tostring','__unm'}
+function PG.static:allocate()
+assert(type(self)=='table',"Make sure that you are using 'Class:allocate' instead of 'Class.allocate'")return setmetatable({class=self},self.__instanceDict)end;function PG.static:new(...)local YKA7cU=self:allocate()
+YKA7cU:initialize(...)return YKA7cU end
+function PG.static:subclass(mCsewfX)
 assert(
 type(self)=='table',"Make sure that you are using 'Class:subclass' instead of 'Class.subclass'")
-assert(type(X)=="string","You must provide a name(string) for your class")local dc61=qLH5(X,self)VcV0EuD(dc61)pX4gCR(dc61,self)
-self.subclasses[dc61]=true;self:subclassed(dc61)return dc61 end;function dk.static:subclassed(aguhyl)end
-function dk.static:isSubclassOf(p)
+assert(type(mCsewfX)=="string","You must provide a name(string) for your class")local yY=WQ6(mCsewfX,self)iPL3B4cr(yY)GI2hz6SK(yY,self)
+self.subclasses[yY]=true;self:subclassed(yY)return yY end;function PG.static:subclassed(Xf)end
+function PG.static:isSubclassOf(UlFdiZ7v)
 return
 
-type(p)=='table'and
-type(self)=='table'and type(self.super)=='table'and
-(self.super==p or type(self.super.isSubclassOf)=='function'and
-self.super:isSubclassOf(p))end
-function dk.static:include(...)
-assert(type(self)=='table',"Make sure you that you are using 'Class:include' instead of 'Class.include'")for gOPDv,aSdZU3 in ipairs({...})do gad4ZcL(self,aSdZU3)end
-return self end
-function dk.static:includes(YKDL)
-return
-
-type(YKDL)=='table'and type(self)=='table'and type(self.__mixins)=='table'and
-(
-self.__mixins[YKDL]or
+type(UlFdiZ7v)=='table'and type(self)=='table'and
 type(self.super)=='table'and
-type(self.super.includes)=='function'and self.super:includes(YKDL))end;function dk:initialize()end;function dk:__tostring()
+(self.super==UlFdiZ7v or
+
+type(self.super.isSubclassOf)=='function'and self.super:isSubclassOf(UlFdiZ7v))end
+function PG.static:include(...)
+assert(type(self)=='table',"Make sure you that you are using 'Class:include' instead of 'Class.include'")for U,wFeA in ipairs({...})do Oh(self,wFeA)end;return self end
+function PG.static:includes(JQgI)
+return
+
+type(JQgI)=='table'and type(self)=='table'and type(self.__mixins)=='table'and
+(
+self.__mixins[JQgI]or
+type(self.super)=='table'and
+type(self.super.includes)=='function'and self.super:includes(JQgI))end;function PG:initialize()end;function PG:__tostring()
 return"instance of "..tostring(self.class)end
-function dk:isInstanceOf(oFyb6OLp)
+function PG:isInstanceOf(N)
 return
 
 type(self)=='table'and
-type(self.class)=='table'and type(oFyb6OLp)=='table'and
-(oFyb6OLp==self.class or
-
-type(oFyb6OLp.isSubclassOf)=='function'and self.class:isSubclassOf(oFyb6OLp))end
-function n.class(oGdh_mv,WjvvK,...)WjvvK=WjvvK or dk;return WjvvK:subclass(oGdh_mv,...)end;n.Object=dk
-setmetatable(n,{__call=function(TASVwBgU,...)return n.class(...)end})local E={}
-if type(n.common)=="table"and
-type(n.common.class)=="function"and
-type(n.common.instannce)=="function"then E=n.common else
-function E.class(KjUncMB,XkT,c3dr)
-local NGH=n.class(KjUncMB,c3dr)XkT=XkT or{}for tIc,MD2O in pairs(XkT)do NGH[tIc]=MD2O end;if XkT.init then
-NGH.initialize=XkT.init end;return NGH end;function E.instance(HQ,...)return HQ:new(...)end end;if E.__BY==nil then E.__BY="middleclass"end
+type(self.class)=='table'and type(N)=='table'and
+(N==self.class or type(N.isSubclassOf)=='function'and
+self.class:isSubclassOf(N))end;function z.class(fs52REi,PUNkgaiM,...)PUNkgaiM=PUNkgaiM or PG
+return PUNkgaiM:subclass(fs52REi,...)end;z.Object=PG
+setmetatable(z,{__call=function(s6FbB,...)return
+z.class(...)end})local n={}
+if type(z.common)=="table"and
+type(z.common.class)=="function"and
+type(z.common.instannce)=="function"then n=z.common else
+function n.class(X,dc61,aguhyl)
+local p=z.class(X,aguhyl)dc61=dc61 or{}for gOPDv,aSdZU3 in pairs(dc61)do p[gOPDv]=aSdZU3 end;if
+dc61.init then p.initialize=dc61.init end;return p end;function n.instance(YKDL,...)return YKDL:new(...)end end;if n.__BY==nil then n.__BY="middleclass"end
 pcall(function()
-require("classcommons2"):register("middleclass",E)end)return{common=E}end
+require("classcommons2"):register("middleclass",n)end)return{common=n}end
 require("package").preload["30log"]=function(...)
-local cng,lE,nI2F0id,N4aMD_P,pCi=assert,pairs,type,tostring,setmetatable
-local NzeoQJ,AwGfFV,wCRY,d0uKSVw1={},pCi({},{__mode='k'}),pCi({},{__mode='k'})local function lNOqUk8(ypDndT8,MV65)
-cng(wCRY[ypDndT8],('Wrong method call. Expected class:%s.'):format(MV65))end
-local function YAnZNei(Y3D66Ym9,q,PhJ)
-Y3D66Ym9=Y3D66Ym9 or{}local h=q or{}
-for j2K,r8hgwQ in lE(Y3D66Ym9)do
-if PhJ and nI2F0id(r8hgwQ)==PhJ then
-h[j2K]=r8hgwQ elseif not PhJ then if nI2F0id(r8hgwQ)=='table'and j2K~="__index"then
-h[j2K]=YAnZNei(r8hgwQ)else h[j2K]=r8hgwQ end end end;return h end
-local function h8YWR44E(_6U,...)lNOqUk8(_6U,'new(...) or class(...)')local GLSzBQs={class=_6U}
-AwGfFV[GLSzBQs]=N4aMD_P(GLSzBQs)pCi(GLSzBQs,_6U)if _6U.init then
-if nI2F0id(_6U.init)=='table'then
-YAnZNei(_6U.init,GLSzBQs)else _6U.init(GLSzBQs,...)end end;return GLSzBQs end
-local function VF(c,xg,Id2KoP_G)lNOqUk8(c,'extend(...)')local Y2or={}wCRY[Y2or]=N4aMD_P(Y2or)
-YAnZNei(Id2KoP_G,YAnZNei(c,Y2or))
-Y2or.name,Y2or.__index,Y2or.super=Id2KoP_G and Id2KoP_G.name or xg,Y2or,c;return pCi(Y2or,c)end
-NzeoQJ={__call=function(zN8ASHV5,...)return zN8ASHV5:new(...)end,__tostring=function(iju,...)if AwGfFV[iju]then
+local oFyb6OLp,oGdh_mv,WjvvK,TASVwBgU,KjUncMB=assert,pairs,type,tostring,setmetatable
+local XkT,c3dr,NGH,tIc={},KjUncMB({},{__mode='k'}),KjUncMB({},{__mode='k'})local function MD2O(N4aMD_P,pCi)
+oFyb6OLp(NGH[N4aMD_P],('Wrong method call. Expected class:%s.'):format(pCi))end
+local function HQ(NzeoQJ,AwGfFV,wCRY)
+NzeoQJ=NzeoQJ or{}local d0uKSVw1=AwGfFV or{}
+for lNOqUk8,YAnZNei in oGdh_mv(NzeoQJ)do
+if
+wCRY and WjvvK(YAnZNei)==wCRY then d0uKSVw1[lNOqUk8]=YAnZNei elseif not wCRY then if WjvvK(YAnZNei)=='table'and
+lNOqUk8 ~="__index"then d0uKSVw1[lNOqUk8]=HQ(YAnZNei)else
+d0uKSVw1[lNOqUk8]=YAnZNei end end end;return d0uKSVw1 end
+local function cng(h8YWR44E,...)MD2O(h8YWR44E,'new(...) or class(...)')
+local VF={class=h8YWR44E}c3dr[VF]=TASVwBgU(VF)KjUncMB(VF,h8YWR44E)
+if h8YWR44E.init then if
+WjvvK(h8YWR44E.init)=='table'then HQ(h8YWR44E.init,VF)else
+h8YWR44E.init(VF,...)end end;return VF end
+local function lE(fTrMe,ypDndT8,MV65)MD2O(fTrMe,'extend(...)')local Y3D66Ym9={}
+NGH[Y3D66Ym9]=TASVwBgU(Y3D66Ym9)HQ(MV65,HQ(fTrMe,Y3D66Ym9))
+Y3D66Ym9.name,Y3D66Ym9.__index,Y3D66Ym9.super=
+MV65 and MV65.name or ypDndT8,Y3D66Ym9,fTrMe;return KjUncMB(Y3D66Ym9,fTrMe)end
+XkT={__call=function(q,...)return q:new(...)end,__tostring=function(PhJ,...)if c3dr[PhJ]then
 return("instance of '%s' (%s)"):format(
-rawget(iju.class,'name')or'?',AwGfFV[iju])end
+rawget(PhJ.class,'name')or'?',c3dr[PhJ])end
 return
-wCRY[iju]and("class '%s' (%s)"):format(
-rawget(iju,'name')or'?',wCRY[iju])or iju end}wCRY[NzeoQJ]=N4aMD_P(NzeoQJ)
-pCi(NzeoQJ,{__tostring=NzeoQJ.__tostring})
-local fTrMe={isClass=function(XsWgh,l4Hdz)local NSXCgSH=not not wCRY[XsWgh]if l4Hdz then return NSXCgSH and
-(XsWgh.super==l4Hdz)end;return NSXCgSH end,isInstance=function(Wq,SbOQ)local IiuHGo=
-not not AwGfFV[Wq]if SbOQ then return
-IiuHGo and(Wq.class==SbOQ)end;return IiuHGo end}
-d0uKSVw1=function(cGqxtYr,bgJFKeeZ)local yu9fg0nN=YAnZNei(bgJFKeeZ)
-yu9fg0nN.mixins=pCi({},{__mode='k'})wCRY[yu9fg0nN]=N4aMD_P(yu9fg0nN)
-yu9fg0nN.name,yu9fg0nN.__tostring,yu9fg0nN.__call=
-cGqxtYr or yu9fg0nN.name,NzeoQJ.__tostring,NzeoQJ.__call
-yu9fg0nN.include=function(wgx,zlU7X)lNOqUk8(wgx,'include(mixin)')
-wgx.mixins[zlU7X]=true;return YAnZNei(zlU7X,wgx,'function')end
-yu9fg0nN.new,yu9fg0nN.extend,yu9fg0nN.__index,yu9fg0nN.includes=h8YWR44E,VF,yu9fg0nN,function(t,f6qbO)
-lNOqUk8(t,'includes(mixin)')return not
-not(t.mixins[f6qbO]or
-(t.super and t.super:includes(f6qbO)))end
-yu9fg0nN.extends=function(kk,fTrMe)lNOqUk8(kk,'extends(class)')local QrubIAv=kk
-repeat
-QrubIAv=QrubIAv.super until(QrubIAv==fTrMe or QrubIAv==nil)return fTrMe and(QrubIAv==fTrMe)end;return pCi(yu9fg0nN,NzeoQJ)end;fTrMe._DESCRIPTION='30 lines library for object orientation in Lua'
-fTrMe._VERSION='30log v1.0.0'fTrMe._URL='http://github.com/Yonaba/30log'
-fTrMe._LICENSE='MIT LICENSE <http://www.opensource.org/licenses/mit-license.php>'return
-pCi(fTrMe,{__call=function(bLHDW,...)return d0uKSVw1(...)end})end
+NGH[PhJ]and("class '%s' (%s)"):format(
+rawget(PhJ,'name')or'?',NGH[PhJ])or PhJ end}NGH[XkT]=TASVwBgU(XkT)
+KjUncMB(XkT,{__tostring=XkT.__tostring})
+local nI2F0id={isClass=function(h,j2K)local r8hgwQ=not not NGH[h]if j2K then
+return r8hgwQ and(h.super==j2K)end;return r8hgwQ end,isInstance=function(_6U,GLSzBQs)local c=
+not not c3dr[_6U]if GLSzBQs then return
+c and(_6U.class==GLSzBQs)end;return c end}
+tIc=function(xg,Id2KoP_G)local Y2or=HQ(Id2KoP_G)Y2or.mixins=KjUncMB({},{__mode='k'})
+NGH[Y2or]=TASVwBgU(Y2or)
+Y2or.name,Y2or.__tostring,Y2or.__call=xg or Y2or.name,XkT.__tostring,XkT.__call
+Y2or.include=function(zN8ASHV5,iju)MD2O(zN8ASHV5,'include(mixin)')
+zN8ASHV5.mixins[iju]=true;return HQ(iju,zN8ASHV5,'function')end
+Y2or.new,Y2or.extend,Y2or.__index,Y2or.includes=cng,lE,Y2or,function(XsWgh,l4Hdz)
+MD2O(XsWgh,'includes(mixin)')
+return not
+not(XsWgh.mixins[l4Hdz]or
+(XsWgh.super and XsWgh.super:includes(l4Hdz)))end
+Y2or.extends=function(NSXCgSH,nI2F0id)MD2O(NSXCgSH,'extends(class)')local Wq=NSXCgSH;repeat Wq=Wq.super until(
+Wq==nI2F0id or Wq==nil)return nI2F0id and
+(Wq==nI2F0id)end;return KjUncMB(Y2or,XkT)end;nI2F0id._DESCRIPTION='30 lines library for object orientation in Lua'
+nI2F0id._VERSION='30log v1.0.0'nI2F0id._URL='http://github.com/Yonaba/30log'
+nI2F0id._LICENSE='MIT LICENSE <http://www.opensource.org/licenses/mit-license.php>'return
+KjUncMB(nI2F0id,{__call=function(SbOQ,...)return tIc(...)end})end
 require("package").preload["30log-featured"]=function(...)
-local YjFd7b=require"30log"local jZgPYb={}
-jZgPYb.class=function(IN69pa5,UOWJ,WtalJw)
-local JYrf2=YjFd7b():extends(WtalJw):extends(UOWJ)
-JYrf2.__init=UOWJ.init or(WtalJw or{}).init;JYrf2.__name=IN69pa5;return JYrf2 end
-jZgPYb.instance=function(YjFd7b,...)return YjFd7b:new(...)end;jZgPYb.__BY="30log"local zN2={common=jZgPYb}
+local IiuHGo=require"30log"local cGqxtYr={}
+cGqxtYr.class=function(yu9fg0nN,wgx,zlU7X)
+local t=IiuHGo():extends(zlU7X):extends(wgx)t.__init=wgx.init or(zlU7X or{}).init
+t.__name=yu9fg0nN;return t end
+cGqxtYr.instance=function(IiuHGo,...)return IiuHGo:new(...)end;cGqxtYr.__BY="30log"local bgJFKeeZ={common=cGqxtYr}
 pcall(function()
-require("i"):register("30log",jZgPYb)end)return zN2 end
+require("i"):register("30log",cGqxtYr)end)return bgJFKeeZ end
 require("package").preload["compat_env"]=function(...)
-local KHDOUlRY={_TYPE='module',_NAME='compat_env',_VERSION='0.2.2.20120406'}
-local function I0JvPpn(OVx_mN,lB)local byE=lB or'bt'
-local bITCI=OVx_mN and#OVx_mN>0 and OVx_mN:byte(1)==27
-if bITCI and not byE:match'b'then return nil,
-("attempt to load a binary chunk (mode is '%s')"):format(lB)elseif
-not bITCI and not byE:match't'then return nil,
-("attempt to load a text chunk (mode is '%s')"):format(lB)end;return true end;local Ce4ZE=pcall(load,'')
-if Ce4ZE then KHDOUlRY.load=_G.load
-KHDOUlRY.loadfile=_G.loadfile else
-function KHDOUlRY.load(K,F5dtVpnN,kxeBp,a)local kQ
-if type(K)=='string'then local EE9LAE=K
-local iVx,eg=I0JvPpn(EE9LAE,kxeBp)if not iVx then return iVx,eg end;local eg
-kQ,eg=loadstring(EE9LAE,F5dtVpnN)if not kQ then return kQ,eg end elseif type(K)=='function'then local AQviNt=K
-if
-(kxeBp or'bt')~='bt'then local NviN0i=K()local BlMQce,o=I0JvPpn(NviN0i,kxeBp)
-if not BlMQce then return BlMQce,o end
-AQviNt=function()
-if NviN0i then local dpRE=NviN0i;NviN0i=nil;return dpRE else return K()end end end;local T6;kQ,T6=load(AQviNt,F5dtVpnN)if not kQ then return kQ,T6 end else
-error(("bad argument #1 to 'load' (function expected, got %s)"):format(type(K)),2)end;if a then setfenv(kQ,a)end;return kQ end
-function KHDOUlRY.loadfile(fEiXwWq,r3JzMga6,Tuyw)
-if(r3JzMga6 or'bt')~='bt'then local FYLcr2nu
-local ioS69,AiP=io.open(fEiXwWq,'rb')if not ioS69 then return ioS69,AiP end;local function S2jwpoi()local u0riyU
-u0riyU,FYLcr2nu=ioS69:read(4096)return u0riyU end
-local _WX9u,AiP=KHDOUlRY.load(S2jwpoi,fEiXwWq and
-'@'..fEiXwWq,r3JzMga6,Tuyw)ioS69:close()if not _WX9u then return _WX9u,AiP end;if FYLcr2nu then
-return nil,FYLcr2nu end;return _WX9u else local UH,WNph=loadfile(fEiXwWq)
-if not UH then return UH,WNph end;if Tuyw then setfenv(UH,Tuyw)end;return UH end end end
-if _G.setfenv then KHDOUlRY.setfenv=_G.setfenv;KHDOUlRY.getfenv=_G.getfenv else
-local function ytF(gRm)local LPX0,g
-local _l=0;local qao
-repeat _l=_l+1;LPX0,g=debug.getupvalue(gRm,_l)
-if LPX0 ==''then qao=true end until LPX0 =='_ENV'or LPX0 ==nil
-if LPX0 ~='_ENV'then _l=nil;if qao then
-error("upvalues not readable in Lua 5.2 when debug info missing",3)end end;return(LPX0 =='_ENV')and _l,g,qao end
-local function d(ipUPIzc,N8)
-if type(ipUPIzc)=='number'then
-if ipUPIzc<0 then
-error(("bad argument #1 to '%s' (level must be non-negative)"):format(N8),3)elseif ipUPIzc<1 then
-error("thread environments unsupported in Lua 5.2",3)end;ipUPIzc=debug.getinfo(ipUPIzc+2,'f').func elseif
-type(ipUPIzc)~='function'then
-error(("bad argument #1 to '%s' (number expected, got %s)"):format(type(N8,ipUPIzc)),2)end;return ipUPIzc end
-function KHDOUlRY.setfenv(Gzk,J7nsK)local Gzk=d(Gzk,'setfenv')local dXbd,vQj,sVBxyy=ytF(Gzk)
-if dXbd then debug.upvaluejoin(Gzk,dXbd,function()return
-dXbd end,1)
-debug.setupvalue(Gzk,dXbd,J7nsK)else local N9d=debug.getinfo(Gzk,'S').what;if
-N9d~='Lua'and N9d~='main'then
-error("'setfenv' cannot change environment of given object",2)end end;return Gzk end
-function KHDOUlRY.getfenv(S7)if S7 ==0 or S7 ==nil then return _G end
-local S7=d(S7,'setfenv')local bJtvRSR,aBhZK5=ytF(S7)if not bJtvRSR then return _G end;return aBhZK5 end end;return KHDOUlRY end
+local f6qbO={_TYPE='module',_NAME='compat_env',_VERSION='0.2.2.20120406'}
+local function kk(bLHDW,YjFd7b)local jZgPYb=YjFd7b or'bt'
+local zN2=bLHDW and#bLHDW>0 and bLHDW:byte(1)==27
+if zN2 and not jZgPYb:match'b'then return nil,
+("attempt to load a binary chunk (mode is '%s')"):format(YjFd7b)elseif
+not zN2 and not jZgPYb:match't'then return nil,
+("attempt to load a text chunk (mode is '%s')"):format(YjFd7b)end;return true end;local QrubIAv=pcall(load,'')
+if QrubIAv then f6qbO.load=_G.load
+f6qbO.loadfile=_G.loadfile else
+function f6qbO.load(IN69pa5,U,OWJ,WtalJw)local JYrf2
+if type(IN69pa5)=='string'then local KHDOUlRY=IN69pa5
+local I0JvPpn,Ce4ZE=kk(KHDOUlRY,OWJ)if not I0JvPpn then return I0JvPpn,Ce4ZE end;local Ce4ZE
+JYrf2,Ce4ZE=loadstring(KHDOUlRY,U)if not JYrf2 then return JYrf2,Ce4ZE end elseif type(IN69pa5)=='function'then
+local OVx_mN=IN69pa5
+if(OWJ or'bt')~='bt'then local byE=IN69pa5()local bITCI,K=kk(byE,OWJ)if not bITCI then
+return bITCI,K end
+OVx_mN=function()
+if byE then local F5dtVpnN=byE;byE=nil;return F5dtVpnN else return IN69pa5()end end end;local lB;JYrf2,lB=load(OVx_mN,U)if not JYrf2 then return JYrf2,lB end else
+error(("bad argument #1 to 'load' (function expected, got %s)"):format(type(IN69pa5)),2)end;if WtalJw then setfenv(JYrf2,WtalJw)end;return JYrf2 end
+function f6qbO.loadfile(kxeBp,a,kQ)
+if(a or'bt')~='bt'then local EE9LAE;local iVx,eg=io.open(kxeBp,'rb')if
+not iVx then return iVx,eg end;local function AQviNt()local NviN0i;NviN0i,EE9LAE=iVx:read(4096)
+return NviN0i end
+local T6,eg=f6qbO.load(AQviNt,kxeBp and'@'..kxeBp,a,kQ)iVx:close()if not T6 then return T6,eg end
+if EE9LAE then return nil,EE9LAE end;return T6 else local BlMQce,o=loadfile(kxeBp)if not BlMQce then return BlMQce,o end;if kQ then
+setfenv(BlMQce,kQ)end;return BlMQce end end end
+if _G.setfenv then f6qbO.setfenv=_G.setfenv;f6qbO.getfenv=_G.getfenv else
+local function dpRE(r3JzMga6)local Tuyw,FYLcr2nu
+local ioS69=0;local AiP
+repeat ioS69=ioS69+1
+Tuyw,FYLcr2nu=debug.getupvalue(r3JzMga6,ioS69)if Tuyw==''then AiP=true end until Tuyw=='_ENV'or Tuyw==nil
+if Tuyw~='_ENV'then ioS69=nil;if AiP then
+error("upvalues not readable in Lua 5.2 when debug info missing",3)end end;return(Tuyw=='_ENV')and ioS69,FYLcr2nu,AiP end
+local function fEiXwWq(S2jwpoi,_WX9u)
+if type(S2jwpoi)=='number'then
+if S2jwpoi<0 then
+error(("bad argument #1 to '%s' (level must be non-negative)"):format(_WX9u),3)elseif S2jwpoi<1 then
+error("thread environments unsupported in Lua 5.2",3)end;S2jwpoi=debug.getinfo(S2jwpoi+2,'f').func elseif
+type(S2jwpoi)~='function'then
+error(("bad argument #1 to '%s' (number expected, got %s)"):format(type(_WX9u,S2jwpoi)),2)end;return S2jwpoi end
+function f6qbO.setfenv(u0riyU,U)local u0riyU=fEiXwWq(u0riyU,'setfenv')
+local H,WNph,ytF=dpRE(u0riyU)
+if H then
+debug.upvaluejoin(u0riyU,H,function()return H end,1)debug.setupvalue(u0riyU,H,U)else
+local d=debug.getinfo(u0riyU,'S').what;if d~='Lua'and d~='main'then
+error("'setfenv' cannot change environment of given object",2)end end;return u0riyU end
+function f6qbO.getfenv(gRm)if gRm==0 or gRm==nil then return _G end
+local gRm=fEiXwWq(gRm,'setfenv')local LPX0,g=dpRE(gRm)if not LPX0 then return _G end;return g end end;return f6qbO end
 require("package").preload["hump.class"]=function(...)
-local function Jz8JUscj(n_lv,UYQF,WXx)
-if UYQF==nil then return n_lv elseif
-type(UYQF)~='table'then return UYQF elseif WXx[UYQF]then return WXx[UYQF]end;WXx[UYQF]=n_lv;for W4EuxJXi,BlYNd61h in pairs(UYQF)do W4EuxJXi=Jz8JUscj({},W4EuxJXi,WXx)
-if
-n_lv[W4EuxJXi]==nil then n_lv[W4EuxJXi]=Jz8JUscj({},BlYNd61h,WXx)end end;return
-n_lv end
-local function O(XDPndG,sJYFQIP4)return Jz8JUscj(XDPndG,sJYFQIP4,{})end;local function tGmbAgE(Ogq0S2)
-return setmetatable(O({},Ogq0S2),getmetatable(Ogq0S2))end
-local function oU_r(n8Cw3SR)
-local GJqd7gt=n8Cw3SR.__includes or{}if getmetatable(GJqd7gt)then GJqd7gt={GJqd7gt}end;for slE5aDm2,aL_g in
-ipairs(GJqd7gt)do if type(aL_g)=="string"then aL_g=_G[aL_g]end
-O(n8Cw3SR,aL_g)end
-n8Cw3SR.__index=n8Cw3SR
-n8Cw3SR.init=n8Cw3SR.init or n8Cw3SR[1]or function()end;n8Cw3SR.include=n8Cw3SR.include or O
-n8Cw3SR.clone=n8Cw3SR.clone or tGmbAgE;return
-setmetatable(n8Cw3SR,{__call=function(IMUI10L,...)local vPA=setmetatable({},IMUI10L)vPA:init(...)
-return vPA end})end
-if class_commons~=false and not common then common={}function common.class(pUXZ6G4,mk,OeQex1U4)return
-oU_r{__includes={mk,OeQex1U4}}end;function common.instance(i0cV9,...)return
-i0cV9(...)end end;return
-setmetatable({new=oU_r,include=O,clone=tGmbAgE},{__call=function(EGD,...)return oU_r(...)end})end
+local function _l(Gzk,J7nsK,dXbd)
+if J7nsK==nil then return Gzk elseif
+type(J7nsK)~='table'then return J7nsK elseif dXbd[J7nsK]then return dXbd[J7nsK]end;dXbd[J7nsK]=Gzk
+for vQj,sVBxyy in pairs(J7nsK)do vQj=_l({},vQj,dXbd)if Gzk[vQj]==nil then
+Gzk[vQj]=_l({},sVBxyy,dXbd)end end;return Gzk end;local function qao(N9d,S7)return _l(N9d,S7,{})end;local function ipUPIzc(bJtvRSR)return
+setmetatable(qao({},bJtvRSR),getmetatable(bJtvRSR))end
+local function N8(aBhZK5)local Jz8JUscj=
+aBhZK5.__includes or{}
+if getmetatable(Jz8JUscj)then Jz8JUscj={Jz8JUscj}end
+for O,tGmbAgE in ipairs(Jz8JUscj)do
+if type(tGmbAgE)=="string"then tGmbAgE=_G[tGmbAgE]end;qao(aBhZK5,tGmbAgE)end;aBhZK5.__index=aBhZK5
+aBhZK5.init=aBhZK5.init or aBhZK5[1]or function()end;aBhZK5.include=aBhZK5.include or qao
+aBhZK5.clone=aBhZK5.clone or ipUPIzc;return
+setmetatable(aBhZK5,{__call=function(oU_r,...)local n_lv=setmetatable({},oU_r)n_lv:init(...)return n_lv end})end
+if class_commons~=false and not common then common={}function common.class(UYQF,WXx,W4EuxJXi)return
+N8{__includes={WXx,W4EuxJXi}}end;function common.instance(BlYNd61h,...)return
+BlYNd61h(...)end end;return
+setmetatable({new=N8,include=qao,clone=ipUPIzc},{__call=function(XDPndG,...)return N8(...)end})end
 require("package").preload["bit.numberlua"]=function(...)
-local VWiGCreH={_TYPE='module',_NAME='bit.numberlua',_VERSION='0.3.1.20120131'}local B_kkL=math.floor;local u=2^32;local EO6Y=u-1
-local function i_053JPY(GTIA)local gdPUe={}
-local _bxEn=setmetatable({},gdPUe)
-function gdPUe:__index(pcN_ceXY)local _P=GTIA(pcN_ceXY)_bxEn[pcN_ceXY]=_P;return _P end;return _bxEn end
-local function l(rq,mo)
-local function I(RAAJAsR,c1pjj7)local BMv,NQh8=0,1
-while RAAJAsR~=0 and c1pjj7 ~=0 do local P,bkTe=RAAJAsR%mo,c1pjj7%mo;BMv=
-BMv+rq[P][bkTe]*NQh8
-RAAJAsR=(RAAJAsR-P)/mo;c1pjj7=(c1pjj7-bkTe)/mo;NQh8=NQh8*mo end;BMv=BMv+ (RAAJAsR+c1pjj7)*NQh8;return BMv end;return I end
-local function UK(ohmPbyDd)local D=l(ohmPbyDd,2^1)
-local DfDLWkT=i_053JPY(function(MTU8HP4d)return
-i_053JPY(function(hIM_cG0i)return D(MTU8HP4d,hIM_cG0i)end)end)return l(DfDLWkT,2^ (ohmPbyDd.n or 1))end;function VWiGCreH.tobit(jD)return jD%2^32 end
-VWiGCreH.bxor=UK{[0]={[0]=0,[1]=1},[1]={[0]=1,[1]=0},n=4}local NzaICo=VWiGCreH.bxor;function VWiGCreH.bnot(me)return EO6Y-me end
-local k1X83nYm=VWiGCreH.bnot
-function VWiGCreH.band(sgU5HAMG,FDydY)return
-((sgU5HAMG+FDydY)-NzaICo(sgU5HAMG,FDydY))/2 end;local xxzxfj=VWiGCreH.band;function VWiGCreH.bor(PEZ_,c)return
-EO6Y-xxzxfj(EO6Y-PEZ_,EO6Y-c)end;local _ad1m4I=VWiGCreH.bor
-local H1QsS,rIMx
-function VWiGCreH.rshift(ElbTbcZG,r3)if r3 <0 then return H1QsS(ElbTbcZG,-r3)end;return B_kkL(ElbTbcZG%
-2^32/2^r3)end;rIMx=VWiGCreH.rshift
-function VWiGCreH.lshift(p,UiVYRok)
-if UiVYRok<0 then return rIMx(p,-UiVYRok)end;return(p*2^UiVYRok)%2^32 end;H1QsS=VWiGCreH.lshift
-function VWiGCreH.tohex(jvPsY9,tE)tE=tE or 8;local Bmuypm;if tE<=0 then
-if tE==0 then return''end;Bmuypm=true;tE=-tE end
-jvPsY9=xxzxfj(jvPsY9,16^tE-1)return
-('%0'..tE.. (Bmuypm and'X'or'x')):format(jvPsY9)end;local TiA=VWiGCreH.tohex
-function VWiGCreH.extract(hW,iOcgdUx,kCwLIk)kCwLIk=kCwLIk or 1;return xxzxfj(rIMx(hW,iOcgdUx),2^
-kCwLIk-1)end;local Y51P=VWiGCreH.extract
-function VWiGCreH.replace(_l,rjQ,Euo0,LIV)LIV=LIV or 1;local vydlAbZ3=2^LIV-1
-rjQ=xxzxfj(rjQ,vydlAbZ3)local BXxv5z=k1X83nYm(H1QsS(vydlAbZ3,Euo0))return xxzxfj(_l,BXxv5z)+
-H1QsS(rjQ,Euo0)end;local ichL=VWiGCreH.replace
-function VWiGCreH.bswap(mKLU)local Him=xxzxfj(mKLU,0xff)
-mKLU=rIMx(mKLU,8)local cPDhu=xxzxfj(mKLU,0xff)mKLU=rIMx(mKLU,8)
-local UQnOS=xxzxfj(mKLU,0xff)mKLU=rIMx(mKLU,8)local tRWU=xxzxfj(mKLU,0xff)
-return H1QsS(
-H1QsS(H1QsS(Him,8)+cPDhu,8)+UQnOS,8)+tRWU end;local NOK=VWiGCreH.bswap
-function VWiGCreH.rrotate(X2Zy_nb,ITtw3N7E)ITtw3N7E=ITtw3N7E%32;local yozOp=xxzxfj(X2Zy_nb,
-2^ITtw3N7E-1)return rIMx(X2Zy_nb,ITtw3N7E)+
-H1QsS(yozOp,32-ITtw3N7E)end;local Alv=VWiGCreH.rrotate
-function VWiGCreH.lrotate(wxU,kOmS5sy)return Alv(wxU,-kOmS5sy)end;local YeLO2=VWiGCreH.lrotate;VWiGCreH.rol=VWiGCreH.lrotate
-VWiGCreH.ror=VWiGCreH.rrotate
-function VWiGCreH.arshift(CLSdD,Fh)local IlAPA=rIMx(CLSdD,Fh)if CLSdD>=0x80000000 then IlAPA=IlAPA+
-H1QsS(2^Fh-1,32-Fh)end;return IlAPA end;local CkrmO=VWiGCreH.arshift;function VWiGCreH.btest(jLKMpQuK,sUQpby)
-return xxzxfj(jLKMpQuK,sUQpby)~=0 end;VWiGCreH.bit32={}local function ooovsSJe(mbA)
-return(-1-mbA)%u end;VWiGCreH.bit32.bnot=ooovsSJe
-local function s5IsD(_qPhpaFx,zex,pPGcdu,...)local rjp
-if zex then _qPhpaFx=
-_qPhpaFx%u;zex=zex%u;rjp=NzaICo(_qPhpaFx,zex)if pPGcdu then
-rjp=s5IsD(rjp,pPGcdu,...)end;return rjp elseif _qPhpaFx then return _qPhpaFx%u else return 0 end end;VWiGCreH.bit32.bxor=s5IsD
-local function KvYEVoXt(cT2z,z,ke1tWps,...)local gRFA
-if z then cT2z=cT2z%u;z=z%u;gRFA=((cT2z+z)-
-NzaICo(cT2z,z))/2;if ke1tWps then
-gRFA=KvYEVoXt(gRFA,ke1tWps,...)end;return gRFA elseif cT2z then return cT2z%u else return EO6Y end end;VWiGCreH.bit32.band=KvYEVoXt
-local function VWWD_P(jX9a0tJX,YFy4TGc,YjpbYkCb,...)local L1p7luJ
-if YFy4TGc then jX9a0tJX=jX9a0tJX%u;YFy4TGc=
-YFy4TGc%u
-L1p7luJ=EO6Y-xxzxfj(EO6Y-jX9a0tJX,EO6Y-YFy4TGc)
-if YjpbYkCb then L1p7luJ=VWWD_P(L1p7luJ,YjpbYkCb,...)end;return L1p7luJ elseif jX9a0tJX then return jX9a0tJX%u else return 0 end end;VWiGCreH.bit32.bor=VWWD_P;function VWiGCreH.bit32.btest(...)return
-KvYEVoXt(...)~=0 end;function VWiGCreH.bit32.lrotate(eH,WpOZ)return
-YeLO2(eH%u,WpOZ)end;function VWiGCreH.bit32.rrotate(fD2289,folfO)return
-Alv(fD2289%u,folfO)end;function VWiGCreH.bit32.lshift(vtsK,E1p4Mv)if E1p4Mv>
-31 or E1p4Mv<-31 then return 0 end;return
-H1QsS(vtsK%u,E1p4Mv)end;function VWiGCreH.bit32.rshift(IHap,rDvV)if
-rDvV>31 or rDvV<-31 then return 0 end
-return rIMx(IHap%u,rDvV)end
-function VWiGCreH.bit32.arshift(RX1L2q,bCBtWguf)RX1L2q=
-RX1L2q%u
-if bCBtWguf>=0 then
-if bCBtWguf>31 then return
-(RX1L2q>=0x80000000)and EO6Y or 0 else local q=rIMx(RX1L2q,bCBtWguf)if RX1L2q>=
-0x80000000 then
-q=q+H1QsS(2^bCBtWguf-1,32-bCBtWguf)end;return q end else return H1QsS(RX1L2q,-bCBtWguf)end end
-function VWiGCreH.bit32.extract(e1sXUN4f,x,...)local VP=...or 1;if
-x<0 or x>31 or VP<0 or x+VP>32 then error'out of range'end;e1sXUN4f=e1sXUN4f%u;return
-Y51P(e1sXUN4f,x,...)end
-function VWiGCreH.bit32.replace(IQwqq,Xcc4,fqw5,...)local qnVfOeRE=...or 1
+local sJYFQIP4={_TYPE='module',_NAME='bit.numberlua',_VERSION='0.3.1.20120131'}local Ogq0S2=math.floor;local n8Cw3SR=2^32;local GJqd7gt=n8Cw3SR-1
+local function slE5aDm2(ichL)local NOK={}
+local Alv=setmetatable({},NOK)
+function NOK:__index(YeLO2)local CkrmO=ichL(YeLO2)Alv[YeLO2]=CkrmO;return CkrmO end;return Alv end
+local function aL_g(ooovsSJe,s5IsD)
+local function KvYEVoXt(VWWD_P,zsMuNkv)local aXxi,Q18a7QTy=0,1
+while VWWD_P~=0 and zsMuNkv~=0 do
+local K5Rp6,GTIA=VWWD_P%s5IsD,zsMuNkv%s5IsD
+aXxi=aXxi+ooovsSJe[K5Rp6][GTIA]*Q18a7QTy;VWWD_P=(VWWD_P-K5Rp6)/s5IsD
+zsMuNkv=(zsMuNkv-GTIA)/s5IsD;Q18a7QTy=Q18a7QTy*s5IsD end
+aXxi=aXxi+ (VWWD_P+zsMuNkv)*Q18a7QTy;return aXxi end;return KvYEVoXt end
+local function IMUI10L(gdPUe)local _bxEn=aL_g(gdPUe,2^1)
+local pcN_ceXY=slE5aDm2(function(_P)return
+slE5aDm2(function(rq)return _bxEn(_P,rq)end)end)return aL_g(pcN_ceXY,2^ (gdPUe.n or 1))end;function sJYFQIP4.tobit(mo)return mo%2^32 end
+sJYFQIP4.bxor=IMUI10L{[0]={[0]=0,[1]=1},[1]={[0]=1,[1]=0},n=4}local vPA=sJYFQIP4.bxor;function sJYFQIP4.bnot(I)return GJqd7gt-I end
+local pUXZ6G4=sJYFQIP4.bnot
+function sJYFQIP4.band(RAAJAsR,c1pjj7)return
+((RAAJAsR+c1pjj7)-vPA(RAAJAsR,c1pjj7))/2 end;local mk=sJYFQIP4.band;function sJYFQIP4.bor(BMv,NQh8)return
+GJqd7gt-mk(GJqd7gt-BMv,GJqd7gt-NQh8)end
+local OeQex1U4=sJYFQIP4.bor;local i0cV9,EGD
+function sJYFQIP4.rshift(P,bkTe)if bkTe<0 then return i0cV9(P,-bkTe)end;return Ogq0S2(P%
+2^32/2^bkTe)end;EGD=sJYFQIP4.rshift
+function sJYFQIP4.lshift(ohmPbyDd,D)
+if D<0 then return EGD(ohmPbyDd,-D)end;return(ohmPbyDd*2^D)%2^32 end;i0cV9=sJYFQIP4.lshift
+function sJYFQIP4.tohex(DfDLWkT,MTU8HP4d)MTU8HP4d=MTU8HP4d or 8;local hIM_cG0i
 if
-fqw5 <0 or fqw5 >31 or qnVfOeRE<0 or fqw5+qnVfOeRE>32 then error'out of range'end;IQwqq=IQwqq%u;Xcc4=Xcc4%u;return ichL(IQwqq,Xcc4,fqw5,...)end;VWiGCreH.bit={}
-function VWiGCreH.bit.tobit(YIiSKsxK)YIiSKsxK=YIiSKsxK%u;if
-YIiSKsxK>=0x80000000 then YIiSKsxK=YIiSKsxK-u end;return YIiSKsxK end;local zsMuNkv=VWiGCreH.bit.tobit;function VWiGCreH.bit.tohex(Ua,...)
-return TiA(Ua%u,...)end;function VWiGCreH.bit.bnot(qeJtG)return
-zsMuNkv(k1X83nYm(qeJtG%u))end
-local function aXxi(pdpNgBcZ,wV,rLd,...)
-if rLd then return
-aXxi(aXxi(pdpNgBcZ,wV),rLd,...)elseif wV then
-return zsMuNkv(_ad1m4I(pdpNgBcZ%u,wV%u))else return zsMuNkv(pdpNgBcZ)end end;VWiGCreH.bit.bor=aXxi
-local function Q18a7QTy(z8oF,DB6A7N,VhYX,...)
-if VhYX then return
-Q18a7QTy(Q18a7QTy(z8oF,DB6A7N),VhYX,...)elseif DB6A7N then
-return zsMuNkv(xxzxfj(z8oF%u,DB6A7N%u))else return zsMuNkv(z8oF)end end;VWiGCreH.bit.band=Q18a7QTy
-local function K5Rp6(Ha7ErH,rjU95v,sxBl,...)
-if sxBl then return
-K5Rp6(K5Rp6(Ha7ErH,rjU95v),sxBl,...)elseif rjU95v then return
-zsMuNkv(NzaICo(Ha7ErH%u,rjU95v%u))else return zsMuNkv(Ha7ErH)end end;VWiGCreH.bit.bxor=K5Rp6;function VWiGCreH.bit.lshift(m,nD4LhX6z)return
-zsMuNkv(H1QsS(m%u,nD4LhX6z%32))end
-function VWiGCreH.bit.rshift(iN,Lq)return zsMuNkv(rIMx(
-iN%u,Lq%32))end;function VWiGCreH.bit.arshift(s9tW,R61K)
-return zsMuNkv(CkrmO(s9tW%u,R61K%32))end;function VWiGCreH.bit.rol(Jf4os,a4xc)return
-zsMuNkv(YeLO2(Jf4os%u,a4xc%32))end
-function VWiGCreH.bit.ror(e,la5)return zsMuNkv(Alv(
-e%u,la5%32))end
-function VWiGCreH.bit.bswap(i)return zsMuNkv(NOK(i%u))end;return VWiGCreH end
-_=[[
-	for name in luajit lua5.3 lua-5.3 lua5.2 lua-5.2 lua5.1 lua-5.1 lua; do
-		: ${LUA:=$(command -v luajit)}
-	done
-	LUA_PATH='./?.lua;./?/init.lua;./lib/?.lua;./lib/?/init.lua;;'
-	exec "$LUA" "$0" "$@"
-	exit $?
-]]_=nil;if not pcall(require,"i")then print("nothing found")
-os.exit(0)end
-print("something seems embeded")require"strict"local dM=require"i"local U=dM:need("secs")
-local _u,aLgiy=U.class,U.instance;require"compat_env"
+MTU8HP4d<=0 then if MTU8HP4d==0 then return''end;hIM_cG0i=true;MTU8HP4d=-MTU8HP4d end;DfDLWkT=mk(DfDLWkT,16^MTU8HP4d-1)return
+('%0'..MTU8HP4d..
+(hIM_cG0i and'X'or'x')):format(DfDLWkT)end;local VWiGCreH=sJYFQIP4.tohex
+function sJYFQIP4.extract(jD,me,sgU5HAMG)sgU5HAMG=sgU5HAMG or 1;return mk(EGD(jD,me),2^
+sgU5HAMG-1)end;local B_kkL=sJYFQIP4.extract
+function sJYFQIP4.replace(FDydY,PEZ_,c,ElbTbcZG)ElbTbcZG=ElbTbcZG or 1
+local r3=2^ElbTbcZG-1;PEZ_=mk(PEZ_,r3)local p=pUXZ6G4(i0cV9(r3,c))return mk(FDydY,p)+
+i0cV9(PEZ_,c)end;local u=sJYFQIP4.replace
+function sJYFQIP4.bswap(UiVYRok)local jvPsY9=mk(UiVYRok,0xff)
+UiVYRok=EGD(UiVYRok,8)local tE=mk(UiVYRok,0xff)UiVYRok=EGD(UiVYRok,8)
+local Bmuypm=mk(UiVYRok,0xff)UiVYRok=EGD(UiVYRok,8)local hW=mk(UiVYRok,0xff)
+return i0cV9(
+i0cV9(i0cV9(jvPsY9,8)+tE,8)+Bmuypm,8)+hW end;local EO6Y=sJYFQIP4.bswap;function sJYFQIP4.rrotate(iOcgdUx,kCwLIk)kCwLIk=kCwLIk%32
+local _l=mk(iOcgdUx,2^kCwLIk-1)
+return EGD(iOcgdUx,kCwLIk)+i0cV9(_l,32-kCwLIk)end
+local i_053JPY=sJYFQIP4.rrotate
+function sJYFQIP4.lrotate(rjQ,Euo0)return i_053JPY(rjQ,-Euo0)end;local l=sJYFQIP4.lrotate;sJYFQIP4.rol=sJYFQIP4.lrotate
+sJYFQIP4.ror=sJYFQIP4.rrotate
+function sJYFQIP4.arshift(LIV,vydlAbZ3)local BXxv5z=EGD(LIV,vydlAbZ3)
+if LIV>=0x80000000 then BXxv5z=BXxv5z+i0cV9(2^vydlAbZ3-1,
+32-vydlAbZ3)end;return BXxv5z end;local UK=sJYFQIP4.arshift
+function sJYFQIP4.btest(mKLU,Him)return mk(mKLU,Him)~=0 end;sJYFQIP4.bit32={}
+local function NzaICo(cPDhu)return(-1-cPDhu)%n8Cw3SR end;sJYFQIP4.bit32.bnot=NzaICo
+local function k1X83nYm(UQnOS,tRWU,X2Zy_nb,...)local ITtw3N7E
+if tRWU then UQnOS=UQnOS%n8Cw3SR;tRWU=tRWU%
+n8Cw3SR;ITtw3N7E=vPA(UQnOS,tRWU)if X2Zy_nb then
+ITtw3N7E=k1X83nYm(ITtw3N7E,X2Zy_nb,...)end;return ITtw3N7E elseif UQnOS then return UQnOS%n8Cw3SR else return 0 end end;sJYFQIP4.bit32.bxor=k1X83nYm
+local function xxzxfj(yozOp,wxU,kOmS5sy,...)local CLSdD
+if wxU then yozOp=yozOp%n8Cw3SR;wxU=wxU%
+n8Cw3SR
+CLSdD=((yozOp+wxU)-vPA(yozOp,wxU))/2;if kOmS5sy then CLSdD=xxzxfj(CLSdD,kOmS5sy,...)end
+return CLSdD elseif yozOp then return yozOp%n8Cw3SR else return GJqd7gt end end;sJYFQIP4.bit32.band=xxzxfj
+local function _ad1m4I(Fh,IlAPA,jLKMpQuK,...)local sUQpby
+if IlAPA then Fh=Fh%n8Cw3SR
+IlAPA=IlAPA%n8Cw3SR
+sUQpby=GJqd7gt-mk(GJqd7gt-Fh,GJqd7gt-IlAPA)
+if jLKMpQuK then sUQpby=_ad1m4I(sUQpby,jLKMpQuK,...)end;return sUQpby elseif Fh then return Fh%n8Cw3SR else return 0 end end;sJYFQIP4.bit32.bor=_ad1m4I;function sJYFQIP4.bit32.btest(...)
+return xxzxfj(...)~=0 end;function sJYFQIP4.bit32.lrotate(mbA,_qPhpaFx)return
+l(mbA%n8Cw3SR,_qPhpaFx)end
+function sJYFQIP4.bit32.rrotate(zex,pPGcdu)return i_053JPY(
+zex%n8Cw3SR,pPGcdu)end
+function sJYFQIP4.bit32.lshift(rjp,cT2z)if cT2z>31 or cT2z<-31 then return 0 end;return i0cV9(rjp%
+n8Cw3SR,cT2z)end
+function sJYFQIP4.bit32.rshift(z,ke1tWps)
+if ke1tWps>31 or ke1tWps<-31 then return 0 end;return EGD(z%n8Cw3SR,ke1tWps)end
+function sJYFQIP4.bit32.arshift(gRFA,jX9a0tJX)gRFA=gRFA%n8Cw3SR
+if jX9a0tJX>=0 then
+if jX9a0tJX>31 then return
+(gRFA>=0x80000000)and GJqd7gt or 0 else
+local YFy4TGc=EGD(gRFA,jX9a0tJX)if gRFA>=0x80000000 then
+YFy4TGc=YFy4TGc+i0cV9(2^jX9a0tJX-1,32-jX9a0tJX)end;return YFy4TGc end else return i0cV9(gRFA,-jX9a0tJX)end end
+function sJYFQIP4.bit32.extract(YjpbYkCb,L1p7luJ,...)local eH=...or 1
+if
+L1p7luJ<0 or L1p7luJ>31 or eH<0 or L1p7luJ+eH>32 then error'out of range'end;YjpbYkCb=YjpbYkCb%n8Cw3SR;return B_kkL(YjpbYkCb,L1p7luJ,...)end
+function sJYFQIP4.bit32.replace(WpOZ,fD2289,folfO,...)local vtsK=...or 1
+if
+folfO<0 or folfO>31 or vtsK<0 or folfO+vtsK>32 then error'out of range'end;WpOZ=WpOZ%n8Cw3SR;fD2289=fD2289%n8Cw3SR
+return u(WpOZ,fD2289,folfO,...)end;sJYFQIP4.bit={}
+function sJYFQIP4.bit.tobit(E1p4Mv)E1p4Mv=E1p4Mv%n8Cw3SR;if
+E1p4Mv>=0x80000000 then E1p4Mv=E1p4Mv-n8Cw3SR end;return E1p4Mv end;local H1QsS=sJYFQIP4.bit.tobit;function sJYFQIP4.bit.tohex(IHap,...)return
+VWiGCreH(IHap%n8Cw3SR,...)end
+function sJYFQIP4.bit.bnot(rDvV)return H1QsS(pUXZ6G4(
+rDvV%n8Cw3SR))end
+local function rIMx(RX1L2q,bCBtWguf,q,...)
+if q then return rIMx(rIMx(RX1L2q,bCBtWguf),q,...)elseif bCBtWguf then
+return H1QsS(OeQex1U4(RX1L2q%
+n8Cw3SR,bCBtWguf%n8Cw3SR))else return H1QsS(RX1L2q)end end;sJYFQIP4.bit.bor=rIMx
+local function TiA(e1sXUN4f,x,VP,...)
+if VP then
+return TiA(TiA(e1sXUN4f,x),VP,...)elseif x then
+return H1QsS(mk(e1sXUN4f%n8Cw3SR,x%n8Cw3SR))else return H1QsS(e1sXUN4f)end end;sJYFQIP4.bit.band=TiA
+local function Y51P(IQwqq,Xcc4,fqw5,...)
+if fqw5 then
+return Y51P(Y51P(IQwqq,Xcc4),fqw5,...)elseif Xcc4 then
+return H1QsS(vPA(IQwqq%n8Cw3SR,Xcc4%n8Cw3SR))else return H1QsS(IQwqq)end end;sJYFQIP4.bit.bxor=Y51P
+function sJYFQIP4.bit.lshift(qnVfOeRE,YIiSKsxK)return H1QsS(i0cV9(qnVfOeRE%n8Cw3SR,
+YIiSKsxK%32))end;function sJYFQIP4.bit.rshift(Ua,qeJtG)
+return H1QsS(EGD(Ua%n8Cw3SR,qeJtG%32))end
+function sJYFQIP4.bit.arshift(pdpNgBcZ,wV)return H1QsS(UK(pdpNgBcZ%n8Cw3SR,
+wV%32))end;function sJYFQIP4.bit.rol(rLd,z8oF)
+return H1QsS(l(rLd%n8Cw3SR,z8oF%32))end
+function sJYFQIP4.bit.ror(DB6A7N,VhYX)return H1QsS(i_053JPY(DB6A7N%n8Cw3SR,
+VhYX%32))end;function sJYFQIP4.bit.bswap(Ha7ErH)
+return H1QsS(EO6Y(Ha7ErH%n8Cw3SR))end;return sJYFQIP4 end

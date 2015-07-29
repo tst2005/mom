@@ -8,14 +8,16 @@ ALLINONE=./thirdparty/git/tst2005/luamodules-all-in-one-file/pack-them-all.lua
 
 headn=$(grep -nh '^_=nil$' bin/featuredlua |head -n 1 |cut -d: -f1)
 
-ICHECK="";TEST=y;
+ICHECK="";TEST="";
 while [ $# -gt 0 ]; do
 	o="$1"; shift
 	case "$o" in
 		-i) ICHECK=y ;;
-		-m) TEST="" ;;
+		-t) TEST=y ;;
 	esac
 done
+
+#--mod 30log			thirdparty/git/yonaba/30log/30logclean.lua
 
 "$ALLINONE" \
 --shebang			bin/featuredlua \
@@ -26,9 +28,9 @@ $(if [ -n "$ICHECK" ]; then
 fi) \
 \
 --mod		gro		thirdparty/git/tst2005/lua-gro/gro.lua \
---require	gro									\
---mod strict			thirdparty/local/unknown/strict/strict.lua	\
---require	strict		\
+--require	gro \
+--mod strict			thirdparty/local/unknown/strict/strict.lua \
+--require	strict \
 \
 --mod i				lib/i.lua \
 \
@@ -38,7 +40,7 @@ fi) \
 --mod middleclass		thirdparty/git/kikito/middleclass/middleclass.lua \
 --mod middleclass-featured	lib/middleclass-featured.lua \
 \
---mod 30log			thirdparty/git/yonaba/30log/30log.lua \
+--mod 30log			lib/30log-old.lua \
 --mod 30log-featured		lib/30log-featured.lua \
 \
 --mod compat_env		thirdparty/git/davidm/lua-compat-env/lua/compat_env.lua \

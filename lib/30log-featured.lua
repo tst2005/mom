@@ -3,7 +3,7 @@ local class = require "30log"
 local common = {}
 common.class = function(name, prototype, parent)
         local klass = class():extends(parent):extends(prototype)
-        klass.__init = prototype.init or (parent or {}).init
+        klass.__init = (prototype or {}).init or (parent or {}).init
         klass.__name = name
         return klass
 end
