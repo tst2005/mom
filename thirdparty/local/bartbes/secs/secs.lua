@@ -42,19 +42,3 @@ function class:new(...)
 end
 
 return class
-
---[[
-local common = {}
-function common.class(name, t, parent)
-    parent = parent or class
-    t = t or {}
-    t.__baseclass = parent
-    return setmetatable(t, getmetatable(parent))
-end
-function common.instance(class, ...)
-    return class:new(...)
-end
---common.common = common
-
-return common
-]]--
