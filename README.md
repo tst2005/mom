@@ -1,7 +1,9 @@
 ## What is MOM ?
 
-It will be a minimal Lua Framework.
-
+It was a minimal Lua Framework.
+Now it growing...
+The featured approch is mainly usefull to embedding lot of usefull dependencies inside only one file.
+This file should be also use as a script for command line use (like shell script but in lua).
 
 ## At the beginning
 
@@ -50,6 +52,21 @@ moonscript start by `mo*` I choose `mom`.
 
 It's short, easy to remember, easy to call (`require "mom"`)
 Search resulsts with `mom.lua` or `lua mom` on github and google show me that nothing seems exists.
+
+# What is the plan to conquer the world ?
+
+Mainly :
+ * a default class system
+ * many different other class system
+ * a system to manage different implementation for a common API
+ * env compat
+ * bit module compat
+ * strict module
+
+After :
+ * json module
+ * ... and more ...
+ * minifing the result...
 
 
 ## License
