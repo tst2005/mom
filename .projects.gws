@@ -1,4 +1,4 @@
-thirdparty/git/tst2005/luamodules-all-in-one-file | https://github.com/tst2005/luamodules-all-in-one-file | https://github.com/tst2005/luamodules-all-in-one-file |
+thirdparty/git/tst2005/lua-aio | https://github.com/tst2005/lua-aio | https://github.com/tst2005/lua-aio |
 thirdparty/git/tst2005/lua-gro | https://github.com/tst2005/lua-gro | https://github.com/tst2005/lua-gro |
 thirdparty/git/tst2005/lua-utf8 | https://github.com/tst2005/lua-utf8 | https://github.com/tst2005/lua-utf8 |
 thirdparty/git/yonaba/30log | https://github.com/Yonaba/30log | https://github.com/Yonaba/30log |
@@ -7,3 +7,4 @@ thirdparty/git/vrld/hump | https://github.com/vrld/hump | https://github.com/vrl
 thirdparty/git/bartbes/class-commons-tests | https://github.com/bartbes/Class-Commons-Tests | https://github.com/bartbes/Class-Commons-Tests |
 thirdparty/git/davidm/lua-compat-env | https://github.com/tst2005/lua-compat-env | https://github.com/davidm/lua-compat-env |
 thirdparty/git/davidm/lua-bit-numberlua | https://github.com/davidm/lua-bit-numberlua | https://github.com/davidm/lua-bit-numberlua |
+thirdparty/git/tst2005/lunajson | https://github.com/tst2005/lunajson | https://github.com/grafi-tt/lunajson |
