@@ -1,9 +1,8 @@
--- mom.lua
 
 local _M = {}
 
-_M._VERSION = "2.0"
-
+_M._VERSION = "0.1.0"
+_M._LICENSE = "MIT"
 
 local all = {} -- [modname] = modtable
 local available = {} -- n = modname
@@ -48,16 +47,6 @@ function _M:requireany(...)
 	error("requireany: no implementation found", 2)
 	return false
 end
-
---function _M:default(name)
---	local d = require name or "secs"
---end
-
--- the default implementation
---_M.common = <here a table index to the default implementation>
---_M.common = {class = class, instance = instance} -- it's a 
-
-
 
 function _M:register(name, common)
 	assert(common, "register: argument #2 is invalid")
