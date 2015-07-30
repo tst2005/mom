@@ -2,13 +2,51 @@
 
 _=[[
 	for name in luajit lua5.3 lua-5.3 lua5.2 lua-5.2 lua5.1 lua-5.1 lua; do
-		: ${LUA:=$(command -v luajit)}
+		: ${LUA:="$(command -v "$name")"}
 	done
+	if [ -z "$LUA" ]; then
+		echo >&2 "ERROR: lua interpretor not found"
+		exit 1
+	fi
 	LUA_PATH='./?.lua;./?/init.lua;./lib/?.lua;./lib/?/init.lua;;'
 	exec "$LUA" "$0" "$@"
 	exit $?
 ]]
 _=nil
+require("package").preload["preloaded"] = function(...)-- <pack preloaded> --
+local _M = {}
+
+local preload = require "package".preload
+local enabled = true
+
+local function erase(name)
+	if enabled and preload[name] then
+		preload[name] = nil
+		return true
+	end
+	return false
+end
+local function disable()
+	enabled = false
+end
+local function exists(name)
+	return not not preload[name]
+end
+local function list()
+	local r = {}
+	for k in pairs(preload) do
+		r[#r+1] = k
+	end
+	return r
+end
+
+_M.erase = erase
+_M.disable = disable
+_M.exists = exists
+_M.list = list
+
+return _M
+end;
 require("package").preload["gro"] = function(...)-- <pack gro> --
 
 local _M = {}
@@ -144,12 +182,11 @@ end
 end;
 require("strict")
 require("package").preload["i"] = function(...)-- <pack i> --
--- mom.lua
 
 local _M = {}
 
-_M._VERSION = "2.0"
-
+_M._VERSION = "0.1.0"
+_M._LICENSE = "MIT"
 
 local all = {} -- [modname] = modtable
 local available = {} -- n = modname
@@ -194,16 +231,6 @@ function _M:requireany(...)
 	error("requireany: no implementation found", 2)
 	return false
 end
-
---function _M:default(name)
---	local d = require name or "secs"
---end
-
--- the default implementation
---_M.common = <here a table index to the default implementation>
---_M.common = {class = class, instance = instance} -- it's a 
-
-
 
 function _M:register(name, common)
 	assert(common, "register: argument #2 is invalid")
@@ -272,41 +299,36 @@ function class:new(...)
 end
 
 return class
-
---[[
-local common = {}
-function common.class(name, t, parent)
-    parent = parent or class
-    t = t or {}
-    t.__baseclass = parent
-    return setmetatable(t, getmetatable(parent))
-end
-function common.instance(class, ...)
-    return class:new(...)
-end
---common.common = common
-
-return common
-]]--
 end;
 require("package").preload["secs-featured"] = function(...)-- <pack secs-featured> --
-local class = require "secs"
+local secs = require "secs"
 
 local common = {}
 function common.class(name, t, parent)
-    parent = parent or class
+    parent = parent or secs
     t = t or {}
     t.__baseclass = parent
     return setmetatable(t, getmetatable(parent))
 end
 function common.instance(class, ...)
     return class:new(...)
+    --return secs.new(class, ...)
 end
 common.__BY = "secs"
 
---common.common = common
 pcall(function() require("i"):register("secs", common) end)
-return { common = common }
+local _M = {class = assert(common.class), instance = assert(common.instance), __BY = assert(common.__BY)}
+--_M.common = common
+return _M
+end;
+require("package").preload["class"] = function(...)-- <pack class> --
+
+local common = require "secs-featured".common or require "secs-featured"
+return setmetatable(
+	{ common = common, class = common.class, instance = common.class, __BY = common.__BY },
+	{__call = function(_, ...) return common.class(...) end}
+)
+
 end;
 require("package").preload["middleclass"] = function(...)-- <pack middleclass> --
 local middleclass = {
@@ -493,219 +515,43 @@ setmetatable(middleclass, { __call = function(_, ...) return middleclass.class(.
 return middleclass
 end;
 require("package").preload["middleclass-featured"] = function(...)-- <pack middleclass-featured> --
-local middleclass = {
-  _VERSION     = 'middleclass v3.0.0',
-  _DESCRIPTION = 'Object Orientation for Lua',
-  _LICENSE     = [[
-    MIT LICENSE
-
-    Copyright (c) 2011 Enrique García Cota
-
-    Permission is hereby granted, free of charge, to any person obtaining a
-    copy of this software and associated documentation files (the
-    "Software"), to deal in the Software without restriction, including
-    without limitation the rights to use, copy, modify, merge, publish,
-    distribute, sublicense, and/or sell copies of the Software, and to
-    permit persons to whom the Software is furnished to do so, subject to
-    the following conditions:
-
-    The above copyright notice and this permission notice shall be included
-    in all copies or substantial portions of the Software.
-
-    THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS
-    OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
-    MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.
-    IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY
-    CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT,
-    TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
-    SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
-  ]]
-}
-
-local function _setClassDictionariesMetatables(aClass)
-  local dict = aClass.__instanceDict
-  dict.__index = dict
-
-  local super = aClass.super
-  if super then
-    local superStatic = super.static
-    setmetatable(dict, super.__instanceDict)
-    setmetatable(aClass.static, { __index = function(_,k) return dict[k] or superStatic[k] end })
-  else
-    setmetatable(aClass.static, { __index = function(_,k) return dict[k] end })
-  end
-end
-
-local function _setClassMetatable(aClass)
-  setmetatable(aClass, {
-    __tostring = function() return "class " .. aClass.name end,
-    __index    = aClass.static,
-    __newindex = aClass.__instanceDict,
-    __call     = function(self, ...) return self:new(...) end
-  })
-end
-
-local function _createClass(name, super)
-  local aClass = { name = name, super = super, static = {}, __mixins = {}, __instanceDict={} }
-  aClass.subclasses = setmetatable({}, {__mode = "k"})
-
-  _setClassDictionariesMetatables(aClass)
-  _setClassMetatable(aClass)
-
-  return aClass
-end
-
-local function _createLookupMetamethod(aClass, name)
-  return function(...)
-    local method = aClass.super[name]
-    assert( type(method)=='function', tostring(aClass) .. " doesn't implement metamethod '" .. name .. "'" )
-    return method(...)
-  end
-end
-
-local function _setClassMetamethods(aClass)
-  for _,m in ipairs(aClass.__metamethods) do
-    aClass[m]= _createLookupMetamethod(aClass, m)
-  end
-end
-
-local function _setDefaultInitializeMethod(aClass, super)
-  aClass.initialize = function(instance, ...)
-    return super.initialize(instance, ...)
-  end
-end
-
-local function _includeMixin(aClass, mixin)
-  assert(type(mixin)=='table', "mixin must be a table")
-  for name,method in pairs(mixin) do
-    if name ~= "included" and name ~= "static" then aClass[name] = method end
-  end
-  if mixin.static then
-    for name,method in pairs(mixin.static) do
-      aClass.static[name] = method
-    end
-  end
-  if type(mixin.included)=="function" then mixin:included(aClass) end
-  aClass.__mixins[mixin] = true
-end
-
-local Object = _createClass("Object", nil)
-
-Object.static.__metamethods = { '__add', '__call', '__concat', '__div', '__le', '__lt',
-                                '__mod', '__mul', '__pow', '__sub', '__tostring', '__unm' }
-
-function Object.static:allocate()
-  assert(type(self) == 'table', "Make sure that you are using 'Class:allocate' instead of 'Class.allocate'")
-  return setmetatable({ class = self }, self.__instanceDict)
-end
-
-function Object.static:new(...)
-  local instance = self:allocate()
-  instance:initialize(...)
-  return instance
-end
-
-function Object.static:subclass(name)
-  assert(type(self) == 'table', "Make sure that you are using 'Class:subclass' instead of 'Class.subclass'")
-  assert(type(name) == "string", "You must provide a name(string) for your class")
-
-  local subclass = _createClass(name, self)
-  _setClassMetamethods(subclass)
-  _setDefaultInitializeMethod(subclass, self)
-  self.subclasses[subclass] = true
-  self:subclassed(subclass)
-
-  return subclass
-end
-
-function Object.static:subclassed(other) end
-
-function Object.static:isSubclassOf(other)
-  return type(other)                   == 'table' and
-         type(self)                    == 'table' and
-         type(self.super)              == 'table' and
-         ( self.super == other or
-           type(self.super.isSubclassOf) == 'function' and
-           self.super:isSubclassOf(other)
-         )
-end
-
-function Object.static:include( ... )
-  assert(type(self) == 'table', "Make sure you that you are using 'Class:include' instead of 'Class.include'")
-  for _,mixin in ipairs({...}) do _includeMixin(self, mixin) end
-  return self
-end
-
-function Object.static:includes(mixin)
-  return type(mixin)          == 'table' and
-         type(self)           == 'table' and
-         type(self.__mixins)  == 'table' and
-         ( self.__mixins[mixin] or
-           type(self.super)           == 'table' and
-           type(self.super.includes)  == 'function' and
-           self.super:includes(mixin)
-         )
-end
-
-function Object:initialize() end
-
-function Object:__tostring() return "instance of " .. tostring(self.class) end
-
-function Object:isInstanceOf(aClass)
-  return type(self)                == 'table' and
-         type(self.class)          == 'table' and
-         type(aClass)              == 'table' and
-         ( aClass == self.class or
-           type(aClass.isSubclassOf) == 'function' and
-           self.class:isSubclassOf(aClass)
-         )
-end
-
-
-
-function middleclass.class(name, super, ...)
-  super = super or Object
-  return super:subclass(name, ...)
-end
-
-middleclass.Object = Object
-
-setmetatable(middleclass, { __call = function(_, ...) return middleclass.class(...) end })
-
-
+local middleclass = require "middleclass"
+middleclass._LICENSE = "MIT"
 
 local common = {}
 if type(middleclass.common) == "table"
 and type(middleclass.common.class) == "function"
 and type(middleclass.common.instannce) == "function" then
+	-- already have a classcommons support: use it!
 	common = middleclass.common
 else
+	-- no classcommons support, implement it!
 
-function common.class(name, klass, superclass)
-	local c = middleclass.class(name, superclass)
-	klass = klass or {}
-	for i, v in pairs(klass) do
-		c[i] = v
+	function common.class(name, klass, superclass)
+		local c = middleclass.class(name, superclass)
+		klass = klass or {}
+		for i, v in pairs(klass) do
+			c[i] = v
+		end
+
+		if klass.init then
+			c.initialize = klass.init
+		end
+		return c
 	end
 
-	if klass.init then
-		c.initialize = klass.init
+	function common.instance(c, ...)
+		return c:new(...)
 	end
-	return c
-end
-
-function common.instance(c, ...)
-	return c:new(...)
-end
 end
 if common.__BY == nil then
 	common.__BY = "middleclass"
 end
 
 pcall(function() require("classcommons2"):register("middleclass", common) end)
-
-return {common = common}
---return setmetatable({common = common}, {__index=middleclass})
+local _M = {class = assert(common.class), instance = assert(common.instance), __BY = assert(common.__BY)}
+--_M.common = common
+return _M
 end;
 require("package").preload["30log"] = function(...)-- <pack 30log> --
 local assert, pairs, type, tostring, setmetatable = assert, pairs, type, tostring, setmetatable
@@ -753,11 +599,12 @@ common.instance = function(class, ...)
         return class:new(...)
 end
 common.__BY = "30log"
-local _M = {common = common}
 
 pcall(function() require("i"):register("30log", common) end)
+
+local _M = {class = assert(common.class), instance = assert(common.instance), __BY = assert(common.__BY)}
+--_M.common = common
 return _M
---return setmetatable(_M, {__call = function(self, ...) return class(...) end})
 end;
 require("package").preload["compat_env"] = function(...)-- <pack compat_env> --
 --[[
@@ -1550,4 +1397,1158 @@ function M.bit.bswap(x)
 end
 
 return M
+end;
+require("package").preload["lunajson"] = function(...)-- <pack lunajson> --
+require("package").preload["lunajson._str_lib"] = function(...)-- <pack lunajson._str_lib> --
+local inf = math.huge
+local byte, char, sub = string.byte, string.char, string.sub
+local setmetatable = setmetatable
+local floor = math.floor
+
+local _ENV = nil
+
+local hextbl = {
+	0x0, 0x1, 0x2, 0x3, 0x4, 0x5, 0x6, 0x7, 0x8, 0x9, inf, inf, inf, inf, inf, inf,
+	inf, 0xA, 0xB, 0xC, 0xD, 0xE, 0xF, inf, inf, inf, inf, inf, inf, inf, inf, inf,
+	inf, inf, inf, inf, inf, inf, inf, inf, inf, inf, inf, inf, inf, inf, inf, inf,
+	inf, 0xA, 0xB, 0xC, 0xD, 0xE, 0xF, inf, inf, inf, inf, inf, inf, inf, inf, inf,
+}
+hextbl.__index = function()
+	return inf
+end
+setmetatable(hextbl, hextbl)
+
+return function(myerror)
+	local escapetbl = {
+		['"']  = '"',
+		['\\'] = '\\',
+		['/']  = '/',
+		['b']  = '\b',
+		['f']  = '\f',
+		['n']  = '\n',
+		['r']  = '\r',
+		['t']  = '\t'
+	}
+	escapetbl.__index = function()
+		myerror("invalid escape sequence")
+	end
+	setmetatable(escapetbl, escapetbl)
+
+	local surrogateprev = 0
+
+	local function subst(ch, rest)
+		-- 0.000003814697265625 = 2^-18
+		-- 0.000244140625 = 2^-12
+		-- 0.015625 = 2^-6
+		local u8
+		if ch == 'u' then
+			local c1, c2, c3, c4 = byte(rest, 1, 4)
+			local ucode = hextbl[c1-47] * 0x1000 + hextbl[c2-47] * 0x100 + hextbl[c3-47] * 0x10 + hextbl[c4-47]
+			if ucode == inf then
+				myerror("invalid unicode charcode")
+			end
+			rest = sub(rest, 5)
+			if ucode < 0x80 then -- 1byte
+				u8 = char(ucode)
+			elseif ucode < 0x800 then -- 2byte
+				u8 = char(0xC0 + floor(ucode * 0.015625), 0x80 + ucode % 0x40)
+			elseif ucode < 0xD800 or 0xE000 <= ucode then -- 3byte
+				u8 = char(0xE0 + floor(ucode * 0.000244140625), 0x80 + floor(ucode * 0.015625) % 0x40, 0x80 + ucode % 0x40)
+			elseif 0xD800 <= ucode and ucode < 0xDC00 then -- surrogate pair 1st
+				if surrogateprev == 0 then
+					surrogateprev = ucode
+					if rest == '' then
+						return ''
+					end
+				end
+			else -- surrogate pair 2nd
+				if surrogateprev == 0 then
+					surrogateprev = 1
+				else
+					ucode = 0x10000 + (surrogateprev - 0xD800) * 0x400 + (ucode - 0xDC00)
+					surrogateprev = 0
+					u8 = char(0xF0 + floor(ucode * 0.000003814697265625), 0x80 + floor(ucode * 0.000244140625) % 0x40, 0x80 + floor(ucode * 0.015625) % 0x40, 0x80 + ucode % 0x40)
+				end
+			end
+		end
+		if surrogateprev ~= 0 then
+			myerror("invalid surrogate pair")
+		end
+		return (u8 or escapetbl[ch]) .. rest
+	end
+
+	local function surrogateok()
+		return surrogateprev == 0
+	end
+
+	return {
+		subst = subst,
+		surrogateok = surrogateok
+	}
+end
+end;
+require("package").preload["lunajson.sax"] = function(...)-- <pack lunajson.sax> --
+local error = error
+local byte, char, find, gsub, match, sub =
+	string.byte, string.char, string.find, string.gsub, string.match, string.sub
+local tonumber = tonumber
+local tostring, type, unpack = tonumber, type, table.unpack or unpack
+
+local genstrlib
+if _VERSION == "Lua 5.3" then
+	genstrlib = require 'lunajson._str_lib_lua53'
+else
+	genstrlib = require 'lunajson._str_lib'
+end
+
+local _ENV = nil
+
+local function nop() end
+
+local function newparser(src, saxtbl)
+	local json, jsonnxt
+	local jsonlen, pos, acc = 0, 1, 0
+
+	local dispatcher
+	-- it is temporary for dispatcher[c] and
+	-- dummy for 1st return value of find
+	local f
+
+	-- initialize
+	if type(src) == 'string' then
+		json = src
+		jsonlen = #json
+		jsonnxt = function()
+			json = ''
+			jsonlen = 0
+			jsonnxt = nop
+		end
+	else
+		jsonnxt = function()
+			acc = acc + jsonlen
+			pos = 1
+			repeat
+				json = src()
+				if not json then
+					json = ''
+					jsonlen = 0
+					jsonnxt = nop
+					return
+				end
+				jsonlen = #json
+			until jsonlen > 0
+		end
+		jsonnxt()
+	end
+
+	local sax_startobject = saxtbl.startobject or nop
+	local sax_key = saxtbl.key or nop
+	local sax_endobject = saxtbl.endobject or nop
+	local sax_startarray = saxtbl.startarray or nop
+	local sax_endarray = saxtbl.endarray or nop
+	local sax_string = saxtbl.string or nop
+	local sax_number = saxtbl.number or nop
+	local sax_boolean = saxtbl.boolean or nop
+	local sax_null = saxtbl.null or nop
+
+	-- helper
+	local function tryc()
+		local c = byte(json, pos)
+		if not c then
+			jsonnxt()
+			c = byte(json, pos)
+		end
+		return c
+	end
+
+	local function parseerror(errmsg)
+		error("parse error at " .. acc + pos .. ": " .. errmsg)
+	end
+
+	local function tellc()
+		return tryc() or parseerror("unexpected termination")
+	end
+
+	local function spaces()
+		while true do
+			f, pos = find(json, '^[ \n\r\t]*', pos)
+			if pos ~= jsonlen then
+				pos = pos+1
+				return
+			end
+			if jsonlen == 0 then
+				parseerror("unexpected termination")
+			end
+			jsonnxt()
+		end
+	end
+
+	-- parse error
+	local function f_err()
+		parseerror('invalid value')
+	end
+
+	-- parse constants
+	local function generic_constant(target, targetlen, ret, sax_f)
+		for i = 1, targetlen do
+			local c = tellc()
+			if byte(target, i) ~= c then
+				parseerror("invalid char")
+			end
+			pos = pos+1
+		end
+		return sax_f(ret)
+	end
+
+	local function f_nul()
+		if sub(json, pos, pos+2) == 'ull' then
+			pos = pos+3
+			return sax_null(nil)
+		end
+		return generic_constant('ull', 3, nil, sax_null)
+	end
+
+	local function f_fls()
+		if sub(json, pos, pos+3) == 'alse' then
+			pos = pos+4
+			return sax_boolean(false)
+		end
+		return generic_constant('alse', 4, false, sax_boolean)
+	end
+
+	local function f_tru()
+		if sub(json, pos, pos+2) == 'rue' then
+			pos = pos+3
+			return sax_boolean(true)
+		end
+		return generic_constant('rue', 3, true, sax_boolean)
+	end
+
+	-- parse numbers
+	local radixmark = match(tostring(0.5), '[^0-9]')
+	local fixedtonumber = tonumber
+	if radixmark ~= '.' then
+		if find(radixmark, '%W') then
+			radixmark = '%' .. radixmark
+		end
+		fixedtonumber = function(s)
+			return tonumber(gsub(s, '.', radixmark))
+		end
+	end
+
+	local function generic_number(mns)
+		local buf = {}
+		local i = 1
+
+		local c = byte(json, pos)
+		pos = pos+1
+		if c == 0x30 then
+			buf[i] = c
+			i = i+1
+			c = tryc()
+			pos = pos+1
+			if c and 0x30 <= c and c < 0x3A then
+				parseerror('invalid number')
+			end
+		else
+			repeat
+				buf[i] = c
+				i = i+1
+				c = tryc()
+				pos = pos+1
+			until not (c and 0x30 <= c and c < 0x3A)
+		end
+		if c == 0x2E then
+			local oldi = i
+			repeat
+				buf[i] = c
+				i = i+1
+				c = tryc()
+				pos = pos+1
+			until not (c and 0x30 <= c and c < 0x3A)
+			if oldi+1 == i then
+				parseerror('invalid number')
+			end
+		end
+		if c == 0x45 or c == 0x65 then
+			repeat
+				buf[i] = c
+				i = i+1
+				c = tryc()
+				pos = pos+1
+			until not (c and ((0x30 <= c and c < 0x3A) or (c == 0x2B or c == 0x2D)))
+		end
+		pos = pos-1
+
+		local num = char(unpack(buf))
+		num = fixedtonumber(num)
+		if num then
+			if mns then
+				num = -num
+			end
+			return sax_number(num)
+		end
+		parseerror('invalid number')
+	end
+
+	local function f_zro(mns)
+		local c = byte(json, pos)
+
+		if c == 0x2E then
+			local num = match(json, '^.[0-9]*', pos) -- skip 0
+			local pos2 = #num
+			if pos2 ~= 1 then
+				pos2 = pos + pos2
+				c = byte(json, pos2)
+				if c == 0x45 or c == 0x65 then
+					num = match(json, '^[^eE]*[eE][-+0-9]*', pos)
+					pos2 = pos + #num
+				end
+				num = fixedtonumber(num)
+				if num and pos2 <= jsonlen then
+					pos = pos2
+					if mns then
+						num = 0.0-num
+					else
+						num = num-0.0
+					end
+					return sax_number(num)
+				end
+			end
+			pos = pos-1
+			return generic_number(mns)
+		end
+
+		if c ~= 0x2C and c ~= 0x5D and c ~= 0x7D then -- check e or E when unusual char is detected
+			local pos2 = pos
+			pos = pos-1
+			if not c then
+				return generic_number(mns)
+			end
+			if 0x30 <= c and c < 0x3A then
+				parseerror('invalid number')
+			end
+			local num = match(json, '^.[eE][-+0-9]*', pos)
+			if num then
+				pos2 = pos + #num
+				num = fixedtonumber(num)
+				if not num or pos2 > jsonlen then
+					return generic_number(mns)
+				end
+			end
+			pos = pos2
+		end
+
+		if not mns then
+			return sax_number(0.0)
+		end
+		return sax_number(-0.0)
+	end
+
+	local function f_num(mns)
+		pos = pos-1
+		local num = match(json, '^[0-9]+%.?[0-9]*', pos)
+		local c = byte(num, -1)
+		if c == 0x2E then -- check that num is not ended by comma
+			return generic_number(mns)
+		end
+
+		local pos2 = pos + #num
+		c = byte(json, pos2)
+		if c == 0x45 or c == 0x65 then -- e or E?
+			num = match(json, '^[^eE]*[eE][-+0-9]*', pos)
+			pos2 = pos + #num
+			num = fixedtonumber(num)
+			if not num then
+				return generic_number(mns)
+			end
+		else
+			num = fixedtonumber(num)
+		end
+		if pos2 > jsonlen then
+			return generic_number(mns)
+		end
+		pos = pos2
+
+		if mns then
+			num = 0.0-num
+		else
+			num = num-0.0
+		end
+		return sax_number(num)
+	end
+
+	local function f_mns()
+		local c = byte(json, pos) or tellc()
+		if c then
+			pos = pos+1
+			if c > 0x30 then
+				if c < 0x3A then
+					return f_num(true)
+				end
+			else
+				if c > 0x2F then
+					return f_zro(true)
+				end
+			end
+		end
+		parseerror("invalid number")
+	end
+
+	-- parse strings
+	local f_str_lib = genstrlib(parseerror)
+	local f_str_surrogateok = f_str_lib.surrogateok
+	local f_str_subst = f_str_lib.subst
+
+	local function f_str(iskey)
+		local pos2 = pos
+		local newpos
+		local str = ''
+		local bs
+		while true do
+			while true do
+				newpos = find(json, '[\\"]', pos2)
+				if newpos then
+					break
+				end
+				str = str .. sub(json, pos, jsonlen)
+				if pos2 == jsonlen+2 then
+					pos2 = 2
+				else
+					pos2 = 1
+				end
+				jsonnxt()
+			end
+			if byte(json, newpos) == 0x22 then
+				break
+			end
+			pos2 = newpos+2
+			bs = true
+		end
+		str = str .. sub(json, pos, newpos-1)
+		pos = newpos+1
+
+		if bs then
+			str = gsub(str, '\\(.)([^\\]*)', f_str_subst)
+			if not f_str_surrogateok() then
+				parseerror("invalid surrogate pair")
+			end
+		end
+
+		if iskey then
+			return sax_key(str)
+		end
+		return sax_string(str)
+	end
+
+	-- parse arrays
+	local function f_ary()
+		sax_startarray()
+		spaces()
+		if byte(json, pos) ~= 0x5D then
+			local newpos
+			while true do
+				f = dispatcher[byte(json, pos)]
+				pos = pos+1
+				f()
+				f, newpos = find(json, '^[ \n\r\t]*,[ \n\r\t]*', pos)
+				if not newpos then
+					f, newpos = find(json, '^[ \n\r\t]*%]', pos)
+					if newpos then
+						pos = newpos
+						break
+					end
+					spaces()
+					local c = byte(json, pos)
+					if c == 0x2C then
+						pos = pos+1
+						spaces()
+						newpos = pos-1
+					elseif c == 0x5D then
+						break
+					else
+						parseerror("no closing bracket of an array")
+					end
+				end
+				pos = newpos+1
+				if pos > jsonlen then
+					spaces()
+				end
+			end
+		end
+		pos = pos+1
+		return sax_endarray()
+	end
+
+	-- parse objects
+	local function f_obj()
+		sax_startobject()
+		spaces()
+		if byte(json, pos) ~= 0x7D then
+			local newpos
+			while true do
+				if byte(json, pos) ~= 0x22 then
+					parseerror("not key")
+				end
+				pos = pos+1
+				f_str(true)
+				f, newpos = find(json, '^[ \n\r\t]*:[ \n\r\t]*', pos)
+				if not newpos then
+					spaces()
+					if byte(json, pos) ~= 0x3A then
+						parseerror("no colon after a key")
+					end
+					pos = pos+1
+					spaces()
+					newpos = pos-1
+				end
+				pos = newpos+1
+				if pos > jsonlen then
+					spaces()
+				end
+				f = dispatcher[byte(json, pos)]
+				pos = pos+1
+				f()
+				f, newpos = find(json, '^[ \n\r\t]*,[ \n\r\t]*', pos)
+				if not newpos then
+					f, newpos = find(json, '^[ \n\r\t]*}', pos)
+					if newpos then
+						pos = newpos
+						break
+					end
+					spaces()
+					local c = byte(json, pos)
+					if c == 0x2C then
+						pos = pos+1
+						spaces()
+						newpos = pos-1
+					elseif c == 0x7D then
+						break
+					else
+						parseerror("no closing bracket of an object")
+					end
+				end
+				pos = newpos+1
+				if pos > jsonlen then
+					spaces()
+				end
+			end
+		end
+		pos = pos+1
+		return sax_endobject()
+	end
+
+	-- key should be non-nil
+	dispatcher = {
+		       f_err, f_err, f_err, f_err, f_err, f_err, f_err, f_err, f_err, f_err, f_err, f_err, f_err, f_err, f_err,
+		f_err, f_err, f_err, f_err, f_err, f_err, f_err, f_err, f_err, f_err, f_err, f_err, f_err, f_err, f_err, f_err,
+		f_err, f_err, f_str, f_err, f_err, f_err, f_err, f_err, f_err, f_err, f_err, f_err, f_err, f_mns, f_err, f_err,
+		f_zro, f_num, f_num, f_num, f_num, f_num, f_num, f_num, f_num, f_num, f_err, f_err, f_err, f_err, f_err, f_err,
+		f_err, f_err, f_err, f_err, f_err, f_err, f_err, f_err, f_err, f_err, f_err, f_err, f_err, f_err, f_err, f_err,
+		f_err, f_err, f_err, f_err, f_err, f_err, f_err, f_err, f_err, f_err, f_err, f_ary, f_err, f_err, f_err, f_err,
+		f_err, f_err, f_err, f_err, f_err, f_err, f_fls, f_err, f_err, f_err, f_err, f_err, f_err, f_err, f_nul, f_err,
+		f_err, f_err, f_err, f_err, f_tru, f_err, f_err, f_err, f_err, f_err, f_err, f_obj, f_err, f_err, f_err, f_err,
+	}
+	dispatcher[0] = f_err
+
+	local function run()
+		spaces()
+		f = dispatcher[byte(json, pos)]
+		pos = pos+1
+		f()
+	end
+
+	local function read(n)
+		if n < 0 then
+			error("the argument must be non-negative")
+		end
+		local pos2 = (pos-1) + n
+		local str = sub(json, pos, pos2)
+		while pos2 > jsonlen and jsonlen ~= 0 do
+			jsonnxt()
+			pos2 = pos2 - (jsonlen - (pos-1))
+			str = str .. sub(json, pos, pos2)
+		end
+		if jsonlen ~= 0 then
+			pos = pos2+1
+		end
+		return str
+	end
+
+	local function tellpos()
+		return acc + pos
+	end
+
+	return {
+		run = run,
+		tryc = tryc,
+		read = read,
+		tellpos = tellpos,
+	}
+end
+
+local function newfileparser(fn, saxtbl)
+	local fp = io.open(fn)
+	local function gen()
+		local s
+		if fp then
+			s = fp:read(8192)
+			if not s then
+				fp:close()
+				fp = nil
+			end
+		end
+		return s
+	end
+	return newparser(gen, saxtbl)
+end
+
+return {
+	newparser = newparser,
+	newfileparser = newfileparser
+}
+end;
+require("package").preload["lunajson.decoder"] = function(...)-- <pack lunajson.decoder> --
+local error = error
+local byte, char, find, gsub, match, sub = string.byte, string.char, string.find, string.gsub, string.match, string.sub
+local tonumber = tonumber
+local tostring, setmetatable = tostring, setmetatable
+
+local genstrlib
+if _VERSION == "Lua 5.3" then
+	genstrlib = require 'lunajson._str_lib_lua53'
+else
+	genstrlib = require 'lunajson._str_lib'
+end
+
+local _ENV = nil
+
+local function newdecoder()
+	local json, pos, nullv, arraylen
+
+	local dispatcher
+	-- it is temporary for dispatcher[c] and
+	-- dummy for 1st return value of find
+	local f
+
+	-- helper
+	local function decodeerror(errmsg)
+		error("parse error at " .. pos .. ": " .. errmsg)
+	end
+
+	-- parse error
+	local function f_err()
+		decodeerror('invalid value')
+	end
+
+	-- parse constants
+	local function f_nul()
+		if sub(json, pos, pos+2) == 'ull' then
+			pos = pos+3
+			return nullv
+		end
+		decodeerror('invalid value')
+	end
+
+	local function f_fls()
+		if sub(json, pos, pos+3) == 'alse' then
+			pos = pos+4
+			return false
+		end
+		decodeerror('invalid value')
+	end
+
+	local function f_tru()
+		if sub(json, pos, pos+2) == 'rue' then
+			pos = pos+3
+			return true
+		end
+		decodeerror('invalid value')
+	end
+
+	-- parse numbers
+	local radixmark = match(tostring(0.5), '[^0-9]')
+	local fixedtonumber = tonumber
+	if radixmark ~= '.' then
+		if find(radixmark, '%W') then
+			radixmark = '%' .. radixmark
+		end
+		fixedtonumber = function(s)
+			return tonumber(gsub(s, '.', radixmark))
+		end
+	end
+
+	local function f_zro(mns)
+		local c = byte(json, pos)
+
+		if c == 0x2E then
+			local num = match(json, '^.[0-9]*', pos) -- skip 0
+			local pos2 = #num
+			if pos2 ~= 1 then
+				pos2 = pos + pos2
+				c = byte(json, pos2)
+				if c == 0x45 or c == 0x65 then
+					num = match(json, '^[^eE]*[eE][-+0-9]*', pos)
+					pos2 = pos + #num
+				end
+				num = fixedtonumber(num)
+				if num then
+					pos = pos2
+					if mns then
+						num = 0.0-num
+					else
+						num = num-0.0
+					end
+					return num
+				end
+			end
+			decodeerror('invalid number')
+		end
+
+		if c ~= 0x2C and c ~= 0x5D and c ~= 0x7D and c then -- unusual char is detected
+			if 0x30 <= c and c < 0x3A then
+				decodeerror('invalid number')
+			end
+			local pos2 = pos-1
+			local num = match(json, '^.[eE][-+0-9]*', pos2)
+			if num then
+				pos2 = pos2 + #num
+				num = fixedtonumber(num)
+				if not num then
+					decodeerror('invalid number')
+				end
+				pos = pos2
+			end
+		end
+
+		if not mns then
+			return 0.0
+		end
+		return -0.0
+	end
+
+	local function f_num(mns)
+		pos = pos-1
+		local num = match(json, '^[0-9]+%.?[0-9]*', pos)
+		local c = byte(num, -1)
+		if c == 0x2E then -- check that num is not ended by comma
+			decodeerror('invalid number')
+		end
+
+		local pos2 = pos + #num
+		c = byte(json, pos2)
+		if c == 0x45 or c == 0x65 then -- e or E?
+			num = match(json, '^[^eE]*[eE][-+0-9]*', pos)
+			pos2 = pos + #num
+			num = fixedtonumber(num)
+			if not num then
+				decodeerror('invalid number')
+			end
+		else
+			num = fixedtonumber(num)
+		end
+		pos = pos2
+
+		if mns then
+			num = 0.0-num
+		else
+			num = num-0.0
+		end
+		return num
+	end
+
+	local function f_mns()
+		local c = byte(json, pos)
+		if c then
+			pos = pos+1
+			if c > 0x30 then
+				if c < 0x3A then
+					return f_num(true)
+				end
+			else
+				if c > 0x2F then
+					return f_zro(true)
+				end
+			end
+		end
+		decodeerror('invalid number')
+	end
+
+	-- parse strings
+	local f_str_lib = genstrlib(decodeerror)
+	local f_str_surrogateok = f_str_lib.surrogateok
+	local f_str_subst = f_str_lib.subst
+
+	local f_str_keycache = {}
+
+	local function f_str(iskey)
+		local newpos = pos-2
+		local pos2 = pos
+		local c1, c2
+		repeat
+			newpos = find(json, '"', pos2, true)
+			if not newpos then
+				decodeerror("unterminated string")
+			end
+			pos2 = newpos+1
+			while true do
+				c1, c2 = byte(json, newpos-2, newpos-1)
+				if c2 ~= 0x5C or c1 ~= 0x5C then
+					break
+				end
+				newpos = newpos-2
+			end
+		until c2 ~= 0x5C
+
+		local str = sub(json, pos, pos2-2)
+		pos = pos2
+
+		if iskey then
+			local str2 = f_str_keycache[str]
+			if str2 then
+				return str2
+			end
+		end
+		local str2 = str
+		if find(str2, '\\', 1, true) then
+			str2 = gsub(str2, '\\(.)([^\\]*)', f_str_subst)
+			if not f_str_surrogateok() then
+				decodeerror("invalid surrogate pair")
+			end
+		end
+		if iskey then
+			f_str_keycache[str] = str2
+		end
+		return str2
+	end
+
+	-- parse arrays
+	local function f_ary()
+		local ary = {}
+
+		f, pos = find(json, '^[ \n\r\t]*', pos)
+		pos = pos+1
+
+		local i = 0
+		if byte(json, pos) ~= 0x5D then
+			local newpos = pos-1
+			repeat
+				i = i+1
+				f = dispatcher[byte(json,newpos+1)]
+				pos = newpos+2
+				ary[i] = f()
+				f, newpos = find(json, '^[ \n\r\t]*,[ \n\r\t]*', pos)
+			until not newpos
+
+			f, newpos = find(json, '^[ \n\r\t]*%]', pos)
+			if not newpos then
+				decodeerror("no closing bracket of an array")
+			end
+			pos = newpos
+		end
+
+		pos = pos+1
+		if arraylen then
+			ary[0] = i
+		end
+		return ary
+	end
+
+	-- parse objects
+	local function f_obj()
+		local obj = {}
+
+		f, pos = find(json, '^[ \n\r\t]*', pos)
+		pos = pos+1
+		if byte(json, pos) ~= 0x7D then
+			local newpos = pos-1
+
+			repeat
+				pos = newpos+1
+				if byte(json, pos) ~= 0x22 then
+					decodeerror("not key")
+				end
+				pos = pos+1
+				local key = f_str(true)
+
+				-- optimized for compact json
+				f = f_err
+				do
+					local c1, c2, c3  = byte(json, pos, pos+3)
+					if c1 == 0x3A then
+						newpos = pos
+						if c2 == 0x20 then
+							newpos = newpos+1
+							c2 = c3
+						end
+						f = dispatcher[c2]
+					end
+				end
+				if f == f_err then
+					f, newpos = find(json, '^[ \n\r\t]*:[ \n\r\t]*', pos)
+					if not newpos then
+						decodeerror("no colon after a key")
+					end
+				end
+				f = dispatcher[byte(json, newpos+1)]
+				pos = newpos+2
+				obj[key] = f()
+				f, newpos = find(json, '^[ \n\r\t]*,[ \n\r\t]*', pos)
+			until not newpos
+
+			f, newpos = find(json, '^[ \n\r\t]*}', pos)
+			if not newpos then
+				decodeerror("no closing bracket of an object")
+			end
+			pos = newpos
+		end
+
+		pos = pos+1
+		return obj
+	end
+
+	dispatcher = {
+		       f_err, f_err, f_err, f_err, f_err, f_err, f_err, f_err, f_err, f_err, f_err, f_err, f_err, f_err, f_err,
+		f_err, f_err, f_err, f_err, f_err, f_err, f_err, f_err, f_err, f_err, f_err, f_err, f_err, f_err, f_err, f_err,
+		f_err, f_err, f_str, f_err, f_err, f_err, f_err, f_err, f_err, f_err, f_err, f_err, f_err, f_mns, f_err, f_err,
+		f_zro, f_num, f_num, f_num, f_num, f_num, f_num, f_num, f_num, f_num, f_err, f_err, f_err, f_err, f_err, f_err,
+		f_err, f_err, f_err, f_err, f_err, f_err, f_err, f_err, f_err, f_err, f_err, f_err, f_err, f_err, f_err, f_err,
+		f_err, f_err, f_err, f_err, f_err, f_err, f_err, f_err, f_err, f_err, f_err, f_ary, f_err, f_err, f_err, f_err,
+		f_err, f_err, f_err, f_err, f_err, f_err, f_fls, f_err, f_err, f_err, f_err, f_err, f_err, f_err, f_nul, f_err,
+		f_err, f_err, f_err, f_err, f_tru, f_err, f_err, f_err, f_err, f_err, f_err, f_obj, f_err, f_err, f_err, f_err,
+	}
+	dispatcher[0] = f_err
+	dispatcher.__index = function() -- byte is nil
+		decodeerror("unexpected termination")
+	end
+	setmetatable(dispatcher, dispatcher)
+
+	-- run decoder
+	local function decode(json_, pos_, nullv_, arraylen_)
+		json, pos, nullv, arraylen = json_, pos_, nullv_, arraylen_
+
+		pos = pos or 1
+		f, pos = find(json, '^[ \n\r\t]*', pos)
+		pos = pos+1
+
+		f = dispatcher[byte(json, pos)]
+		pos = pos+1
+		local v = f()
+
+		if pos_ then
+			return v, pos
+		else
+			f, pos = find(json, '^[ \n\r\t]*', pos)
+			if pos ~= #json then
+				error('json ended')
+			end
+			return v
+		end
+	end
+
+	return decode
+end
+
+return newdecoder
+end;
+require("package").preload["lunajson.encoder"] = function(...)-- <pack lunajson.encoder> --
+local error = error
+local byte, find, format, gsub, match = string.byte, string.find, string.format,  string.gsub, string.match
+local concat = table.concat
+local tostring = tostring
+local pairs, type = pairs, type
+local setmetatable = setmetatable
+local huge, tiny = 1/0, -1/0
+
+local f_string_pat
+if _VERSION == "Lua 5.1" then
+	-- use the cluttered pattern because lua 5.1 does not handle \0 in a pattern correctly
+	f_string_pat = '[^ -!#-[%]^-\255]'
+else
+	f_string_pat = '[\0-\31"\\]'
+end
+
+local _ENV = nil
+
+local function newencoder()
+	local v, nullv
+	local i, builder, visited
+
+	local function f_tostring(v)
+		builder[i] = tostring(v)
+		i = i+1
+	end
+
+	local radixmark = match(tostring(0.5), '[^0-9]')
+	local delimmark = match(tostring(12345.12345), '[^0-9' .. radixmark .. ']')
+	if radixmark == '.' then
+		radixmark = nil
+	end
+
+	local radixordelim
+	if radixmark or delimmark then
+		radixordelim = true
+		if radixmark and find(radixmark, '%W') then
+			radixmark = '%' .. radixmark
+		end
+		if delimmark and find(delimmark, '%W') then
+			delimmark = '%' .. delimmark
+		end
+	end
+
+	local f_number = function(n)
+		if tiny < n and n < huge then
+			local s = format("%.17g", n)
+			if radixordelim then
+				if delimmark then
+					s = gsub(s, delimmark, '')
+				end
+				if radixmark then
+					s = gsub(s, radixmark, '.')
+				end
+			end
+			builder[i] = s
+			i = i+1
+			return
+		end
+		error('invalid number')
+	end
+
+	local doencode
+
+	local f_string_subst = {
+		['"'] = '\\"',
+		['\\'] = '\\\\',
+		['\b'] = '\\b',
+		['\f'] = '\\f',
+		['\n'] = '\\n',
+		['\r'] = '\\r',
+		['\t'] = '\\t',
+		__index = function(_, c)
+			return format('\\u00%02X', byte(c))
+		end
+	}
+	setmetatable(f_string_subst, f_string_subst)
+
+	local function f_string(s)
+		builder[i] = '"'
+		if find(s, f_string_pat) then
+			s = gsub(s, f_string_pat, f_string_subst)
+		end
+		builder[i+1] = s
+		builder[i+2] = '"'
+		i = i+3
+	end
+
+	local function f_table(o)
+		if visited[o] then
+			error("loop detected")
+		end
+		visited[o] = true
+
+		local tmp = o[0]
+		if type(tmp) == 'number' then -- arraylen available
+			builder[i] = '['
+			i = i+1
+			for j = 1, tmp do
+				doencode(o[j])
+				builder[i] = ','
+				i = i+1
+			end
+			if tmp > 0 then
+				i = i-1
+			end
+			builder[i] = ']'
+
+		else
+			tmp = o[1]
+			if tmp ~= nil then -- detected as array
+				builder[i] = '['
+				i = i+1
+				local j = 2
+				repeat
+					doencode(tmp)
+					tmp = o[j]
+					if tmp == nil then
+						break
+					end
+					j = j+1
+					builder[i] = ','
+					i = i+1
+				until false
+				builder[i] = ']'
+
+			else -- detected as object
+				builder[i] = '{'
+				i = i+1
+				local tmp = i
+				for k, v in pairs(o) do
+					if type(k) ~= 'string' then
+						error("non-string key")
+					end
+					f_string(k)
+					builder[i] = ':'
+					i = i+1
+					doencode(v)
+					builder[i] = ','
+					i = i+1
+				end
+				if i > tmp then
+					i = i-1
+				end
+				builder[i] = '}'
+			end
+		end
+
+		i = i+1
+		visited[o] = nil
+	end
+
+	local dispatcher = {
+		boolean = f_tostring,
+		number = f_number,
+		string = f_string,
+		table = f_table,
+		__index = function()
+			error("invalid type value")
+		end
+	}
+	setmetatable(dispatcher, dispatcher)
+
+	function doencode(v)
+		if v == nullv then
+			builder[i] = 'null'
+			i = i+1
+			return
+		end
+		return dispatcher[type(v)](v)
+	end
+
+	local function encode(v_, nullv_)
+		v, nullv = v_, nullv_
+		i, builder, visited = 1, {}, {}
+
+		doencode(v)
+		return concat(builder)
+	end
+
+	return encode
+end
+
+return newencoder
+end;
+require("package").preload["lunajson.real"] = function(...)-- <pack lunajson.real> --
+local newdecoder = require 'lunajson.decoder'
+local newencoder = require 'lunajson.encoder'
+local sax = require 'lunajson.sax'
+-- If you have need multiple context of decoder encode,
+-- you could require lunajson.decoder or lunajson.encoder directly.
+return {
+	decode = newdecoder(),
+	encode = newencoder(),
+	newparser = sax.newparser,
+	newfileparser = sax.newfileparser,
+}
+end;
+return require "lunajson.real"
 end;

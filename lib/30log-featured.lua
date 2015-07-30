@@ -11,8 +11,9 @@ common.instance = function(class, ...)
         return class:new(...)
 end
 common.__BY = "30log"
-local _M = {common = common}
 
 pcall(function() require("i"):register("30log", common) end)
+
+local _M = {class = assert(common.class), instance = assert(common.instance), __BY = assert(common.__BY)}
+--_M.common = common
 return _M
---return setmetatable(_M, {__call = function(self, ...) return class(...) end})
