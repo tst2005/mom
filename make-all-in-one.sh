@@ -8,12 +8,11 @@ ALLINONE=./thirdparty/git/tst2005/lua-aio/aio.lua
 
 headn=$(grep -nh '^_=nil$' bin/featuredlua |head -n 1 |cut -d: -f1)
 
-ICHECK="";TEST="";
+ICHECK="";
 while [ $# -gt 0 ]; do
 	o="$1"; shift
 	case "$o" in
 		-i) ICHECK=y ;;
-		-t) TEST=y ;;
 	esac
 done
 
@@ -21,6 +20,7 @@ done
 
 #"$ALLINONE" -e 'cmd_sheeban("featured.lua")'
 #exit 1
+
 "$ALLINONE" \
 --shebang			bin/featuredlua \
 --codehead $headn		bin/featuredlua \
@@ -55,17 +55,14 @@ fi) \
 \
 --mod lunajson			thirdparty/git/tst2005/lunajson/lunajson_aio.lua \
 --mod utf8			thirdparty/git/tst2005/lua-utf8/utf8.lua \
---rawmod cliargs			thirdparty/git/amireh/lua_cliargs/src/cliargs.lua \
+--rawmod cliargs		thirdparty/git/amireh/lua_cliargs/src/cliargs.lua \
 \
 $(if [ -n "$ICHECK" ]; then
 	echo "--icheck"
 fi) \
-$(if [ -n "$TEST" ]; then
-	echo "--code bin/featuredlua"
-fi) \
 > featured.lua
 
-
+#--ifndefmod
 
 #--autoaliases
 #--code init.lua
