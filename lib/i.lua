@@ -4,6 +4,10 @@ local _M = {}
 _M._VERSION = "0.1.0"
 _M._LICENSE = "MIT"
 
+local table_unpack =
+	unpack or    -- lua <= 5.1
+	table.unpack -- lua >= 5.2
+
 local all = {} -- [modname] = modtable
 local available = {} -- n = modname
 
@@ -14,32 +18,50 @@ local function softrequire(name)
 	return mod
 end
 
-local function need(name)
+local function needone(name)
 	if all[name] then
 		return all[name]
 	end
 	local function validmodule(m)
-		if type(m) ~= "table" or type(m.common) ~= "table" or not m.common.class or not m.common.instance then
+		if type(m) ~= "table" or not m.class or not m.instance then
 			assert( type(m) == "table")
-			assert( type(m.common) == "table")
-			assert( m.common.class )
-			assert( m.common.instance )
+			assert( m.class )
+			assert( m.instance )
 			return false
 		end
-		return m.common
+		return m
 	end
 
 	local common = validmodule( softrequire(name.."-featured") )or validmodule( softrequire(name) )
 	return common
 end
+local function needall(t_names)
+	local r = {}
+	local all_ok = true
+	local function check(v)
+		if not v then all_ok = false end
+		return v
+	end
+	for i,name in ipairs(t_names) do
+		r[#r+1] = check(needone(name))
+	end
+	r[#r+1] = all_ok
+	return table_unpack(r)
+end
+
+function _M:needall(t_names)
+	assert(t_names)
+	return needall(t_names)
+end
+
 function _M:need(name)
-	return need(name)
+	return needone(name)
 end
 
 function _M:requireany(...)
 	local packed = type(...) == "table" and ... or {...}
 	for i,name in ipairs(packed) do
-		local mod = need(name)
+		local mod = needone(name)
 		if mod then
 			return mod
 		end
