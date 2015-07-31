@@ -23,16 +23,16 @@ local function needone(name)
 		return all[name]
 	end
 	local function validmodule(m)
-		if type(m) ~= "table" or not m.class or not m.instance then
-			assert( type(m) == "table")
-			assert( m.class )
-			assert( m.instance )
+		if type(m) ~= "table" then -- or not m.class or not m.instance then
+			--assert( type(m) == "table")
+			--assert( m.class )
+			--assert( m.instance )
 			return false
 		end
 		return m
 	end
 
-	local common = validmodule( softrequire(name.."-featured") )or validmodule( softrequire(name) )
+	local common = validmodule( softrequire(name.."-featured") ) or validmodule( softrequire(name) )
 	return common
 end
 local function needall(t_names)
@@ -54,9 +54,19 @@ function _M:needall(t_names)
 	return needall(t_names)
 end
 
-function _M:need(name)
-	return needone(name)
-end
+_M.need = setmetatable({}, {
+	__call = function(_, name) return needone(name) end,
+	__index = function(_, k, ...)
+		local m = needone(k)
+		if not m then
+			m = (needone("generic") or {})[k]
+		end
+		return m or false
+	end,
+	__newindex = function(...) error("not allowed", 2) end,
+})
+
+-- require "i".need "generic"["class"]
 
 function _M:requireany(...)
 	local packed = type(...) == "table" and ... or {...}
