@@ -2,3 +2,4 @@
 /thirdparty/git/
 *.tar.gz
 /tmp
+/aio.lua
