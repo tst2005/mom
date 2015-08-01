@@ -72,7 +72,7 @@ local readonly = function(...) error("not allowed", 2) end
 
 local t_need_all = setmetatable({
 }, {
-	__call = function(_, t_names) 
+	__call = function(_, t_names)
 		return needall(t_names)
 	end,
 	__newindex = readonly,
