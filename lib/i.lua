@@ -18,7 +18,10 @@ local function softrequire(name)
 	return mod
 end
 
+local generic = softrequire("generic") or {}
+
 local function needone(name)
+	assert(name)
 	if all[name] then
 		return all[name]
 	end
@@ -35,6 +38,17 @@ local function needone(name)
 	local common = validmodule( softrequire(name.."-featured") ) or validmodule( softrequire(name) )
 	return common
 end
+
+local function return_wrap(r, ok)
+	local o = {
+		unpack = function() return table_unpack(r) end,
+		ok = ok,
+		ok_unpack = function() return ok, table_unpack(r) end,
+		unpack_ok = function() return table_unpack(r), ok end,
+	}
+	return setmetatable(o, { __index = r, })
+end
+
 local function needall(t_names)
 	local r = {}
 	local all_ok = true
@@ -45,25 +59,42 @@ local function needall(t_names)
 	for i,name in ipairs(t_names) do
 		r[#r+1] = check(needone(name))
 	end
-	r[#r+1] = all_ok
-	return table_unpack(r)
+	return return_wrap(r, all_ok)
 end
 
-function _M:needall(t_names)
-	assert(t_names)
-	return needall(t_names)
-end
 
-_M.need = setmetatable({}, {
-	__call = function(_, name) return needone(name) end,
-	__index = function(_, k, ...)
-		local m = needone(k)
-		if not m then
-			m = (needone("generic") or {})[k]
-		end
-		return m or false
+--function _M:needall(t_names)
+--	assert(t_names)
+--	return needall(t_names)
+--end
+
+local readonly = function(...) error("not allowed", 2) end
+
+local t_need_all = setmetatable({
+}, {
+	__call = function(_, t_names) 
+		return needall(t_names)
 	end,
-	__newindex = function(...) error("not allowed", 2) end,
+	__newindex = readonly,
+})
+
+_M.need = setmetatable({
+	all = t_need_all,
+--	any = function(_, k, ...)
+--		return needall()
+--	end
+}, {
+	__call = function(_, name)
+		return needone(name) or generic[name] or false
+	end,
+--	__index = function(_, k, ...)
+--		local m = needone(k)
+--		if not m then
+--			m = generic[k]
+--		end
+--		return m or false
+--	end,
+	__newindex = readonly,
 })
 
 -- require "i".need "generic"["class"]
