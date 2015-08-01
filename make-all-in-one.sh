@@ -22,6 +22,9 @@ done
 lua -l "aio" -e '
 local aio = require "aio"
 local mod, rawmod, shebang, codehead = assert(aio.mod), assert(aio.rawmod), assert(aio.shebang), assert(aio.codehead)
+
+aio.mode("raw")
+
 shebang(			"bin/featuredlua")
 codehead('"$headn"',		"bin/featuredlua")
 
@@ -51,6 +54,7 @@ mod("30log-featured",		"lib/30log-featured.lua")
 mod("compat_env",		"thirdparty/git/davidm/lua-compat-env/lua/compat_env.lua")
 
 mod("hump.class",		"thirdparty/git/vrld/hump/class.lua")
+mod("hump.class-featured",	"lib/hump-featured.lua")
 
 mod("bit.numberlua",		"thirdparty/git/davidm/lua-bit-numberlua/lmod/bit/numberlua.lua")
 
