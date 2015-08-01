@@ -4,7 +4,8 @@ cd -- "$(dirname "$0")" || exit 1
 
 # see https://github.com/tst2005/luamodules-all-in-one-file/
 # wget https://raw.githubusercontent.com/tst2005/luamodules-all-in-one-file/newtry/pack-them-all.lua
-ALLINONE=./thirdparty/git/tst2005/lua-aio/aio.lua
+ALLINONE=./aio.lua
+[ -f "aio.lua" ] || ALLINONE=./thirdparty/git/tst2005/lua-aio/aio.lua
 
 headn=$(grep -nh '^_=nil$' bin/featuredlua |head -n 1 |cut -d: -f1)
 
@@ -36,10 +37,12 @@ fi) \
 --require	strict \
 \
 --mod i				lib/i.lua \
+--mod generic			lib/generic.lua \
 \
 --mod secs			thirdparty/local/bartbes/secs/secs.lua \
 --mod secs-featured		lib/secs-featured.lua \
---mod class			lib/class.lua \
+$( : # --mod class			lib/class.lua \
+) \
 \
 --mod middleclass		thirdparty/git/kikito/middleclass/middleclass.lua \
 --mod middleclass-featured	lib/middleclass-featured.lua \
@@ -53,7 +56,7 @@ fi) \
 \
 --mod bit.numberlua		thirdparty/git/davidm/lua-bit-numberlua/lmod/bit/numberlua.lua \
 \
---mod lunajson			thirdparty/git/tst2005/lunajson/lunajson_aio.lua \
+--mod lunajson			thirdparty/git/tst2005/lunajson/lunajson.lua \
 --mod utf8			thirdparty/git/tst2005/lua-utf8/utf8.lua \
 --rawmod cliargs		thirdparty/git/amireh/lua_cliargs/src/cliargs.lua \
 \
