@@ -2,8 +2,8 @@
 
 cd -- "$(dirname "$0")" || exit 1
 
-# see https://github.com/tst2005/luamodules-all-in-one-file/
-# wget https://raw.githubusercontent.com/tst2005/luamodules-all-in-one-file/newtry/pack-them-all.lua
+# see https://github.com/tst2005/lua-aio
+# wget https://raw.githubusercontent.com/tst2005/lua-aio/aio.lua
 ALLINONE=./aio.lua
 [ -f "aio.lua" ] || ALLINONE=./thirdparty/git/tst2005/lua-aio/aio-cli
 
