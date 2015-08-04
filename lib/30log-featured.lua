@@ -2,10 +2,10 @@ local class = require "30log"
 
 local common = {}
 common.class = function(name, prototype, parent)
-        local klass = class():extends(parent):extends(prototype)
-        klass.__init = (prototype or {}).init or (parent or {}).init
-        klass.__name = name
-        return klass
+	local klass = class():extend(nil,parent):extend(nil,prototype)
+	klass.init = (prototype or {}).init or (parent or {}).init
+	klass.name = name
+	return klass
 end
 common.instance = function(class, ...)
         return class:new(...)

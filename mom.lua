@@ -629,46 +629,148 @@ local _M = {class = assert(common.class), instance = assert(common.instance), __
 return _M
 ]]):gsub('\\([%]%[])','%1')
 sources["30log"]=([[-- <pack 30log> --
-local assert, pairs, type, tostring, setmetatable = assert, pairs, type, tostring, setmetatable
-local baseMt, _instances, _classes, class = {}, setmetatable({},{__mode='k'}), setmetatable({},{__mode='k'})
+local assert       = assert
+local pairs        = pairs
+local type         = type
+local tostring     = tostring
+local setmetatable = setmetatable
+
+local baseMt     = {}
+local _instances = setmetatable({},{__mode='k'})
+local _classes   = setmetatable({},{__mode='k'})
+local _class
+
+local function assert_class(class, method) 
+  assert(_classes\[class\], ('Wrong method call. Expected class:%s.'):format(method)) 
+end
+
 local function deep_copy(t, dest, aType)
-  local t, r = t or {}, dest or {}
+  t = t or {}; local r = dest or {}
   for k,v in pairs(t) do
-    if aType and type(v)==aType then r\[k\] = v elseif not aType then
-      if type(v) == 'table' and k ~= "__index" then r\[k\] = deep_copy(v) else r\[k\] = v end
+    if aType and type(v)==aType then 
+      r\[k\] = v 
+    elseif not aType then
+      if type(v) == 'table' and k ~= "__index" then 
+        r\[k\] = deep_copy(v) 
+      else 
+        r\[k\] = v 
+      end
     end
-  end; return r
+  end
+  return r
 end
+
 local function instantiate(self,...)
-  assert(_classes\[self\],'new() should be called from a class.')
-  local instance = deep_copy(self) ; _instances\[instance\] = tostring(instance); setmetatable(instance,self)
-  if self.__init then if type(self.__init) == 'table' then deep_copy(self.__init, instance) else self.__init(instance, ...) end; end; return instance
+  assert_class(self, 'new(...) or class(...)')
+  local instance = {class = self}
+  _instances\[instance\] = tostring(instance)
+  setmetatable(instance,self)
+  
+  if self.init then
+    if type(self.init) == 'table' then 
+      deep_copy(self.init, instance)
+    else 
+      self.init(instance, ...) 
+    end
+  end
+  return instance
 end
-local function extends(self,extra_params)
-  local heir = {}; _classes\[heir\] = tostring(heir); deep_copy(extra_params, deep_copy(self, heir));
-  heir.__index, heir.super = heir, self; return setmetatable(heir,self)
+
+local function extend(self, name, extra_params)
+  assert_class(self, 'extend(...)')
+  local heir = {}
+  _classes\[heir\] = tostring(heir)
+  deep_copy(extra_params, deep_copy(self, heir))
+  heir.name = extra_params and extra_params.name or name
+  heir.__index = heir
+  heir.super = self
+  return setmetatable(heir,self)
 end
-baseMt = { __call = function (self,...) return self:new(...) end, __tostring = function(self,...)
-  if _instances\[self\] then return ('object(of %s):<%s>'):format((rawget(getmetatable(self),'__name') or '?'), _instances\[self\]) end
-  return _classes\[self\] and ('class(%s):<%s>'):format((rawget(self,'__name') or '?'),_classes\[self\]) or self
+
+baseMt = {
+  __call = function (self,...) return self:new(...) end,
+  __tostring = function(self,...)
+    if _instances\[self\] then
+      return 
+      ("instance of '%s' (%s)")
+        :format(rawget(self.class,'name') or '?', _instances\[self\])
+    end
+    return _classes\[self\] and 
+      ("class '%s' (%s)")
+        :format(rawget(self,'name') or '?',_classes\[self\]) or self
 end}
-local class = function(attr)
-  local c = deep_copy(attr) ; _classes\[c\] = tostring(c);
-  c.include = function(self,include) assert(_classes\[self\], 'Mixins can only be used on classes.'); return deep_copy(include, self, 'function') end
-  c.new, c.extends, c.__index, c.__call, c.__tostring = instantiate, extends, c, baseMt.__call, baseMt.__tostring;
-  c.is = function(self, kind) local super; while true do super = getmetatable(super or self) ; if super == kind or super == nil then break end ; end;
-  return kind and (super == kind) end; return setmetatable(c,baseMt)
-end; return class
+
+_classes\[baseMt\] = tostring(baseMt)
+setmetatable(baseMt, {__tostring = baseMt.__tostring})
+
+local class = {
+  isClass = function(class, ofsuper)
+    local isclass = not not _classes\[class\]
+    if ofsuper then
+      return isclass and (class.super == ofsuper)
+    end
+    return isclass 
+  end,
+  isInstance = function(instance, ofclass) 
+    local isinstance = not not _instances\[instance\]
+    if ofclass then
+      return isinstance and (instance.class == ofclass)
+    end
+    return isinstance 
+  end
+}
+  
+_class = function(name, attr)
+  local c = deep_copy(attr)
+  c.mixins = setmetatable({},{__mode='k'})
+  _classes\[c\] = tostring(c)
+  c.name       = name
+  c.__tostring = baseMt.__tostring
+  c.__call     = baseMt.__call
+  
+  c.include = function(self,mixin)
+    assert_class(self, 'include(mixin)')
+    self.mixins\[mixin\] = true
+    return deep_copy(mixin, self, 'function') 
+  end
+  
+  c.new = instantiate
+  c.extend = extend
+  c.__index = c
+  
+  c.includes = function(self,mixin) 
+    assert_class(self,'includes(mixin)')
+    return not not (self.mixins\[mixin\] or (self.super and self.super:includes(mixin)))
+  end
+  
+  c.extends = function(self, class)
+    assert_class(self, 'extends(class)')
+    local super = self
+    repeat 
+      super = super.super
+    until (super == class or super == nil)
+    return class and (super == class) 
+  end
+  
+  return setmetatable(c, baseMt) 
+end
+
+class._DESCRIPTION = '30 lines library for object orientation in Lua'
+class._VERSION     = '30log v1.0.0'
+class._URL         = 'http://github.com/Yonaba/30log'
+class._LICENSE     = 'MIT LICENSE <http://www.opensource.org/licenses/mit-license.php>'
+
+return setmetatable(class,{__call = function(_,...) return _class(...) end })
 ]]):gsub('\\([%]%[])','%1')
 sources["30log-featured"]=([[-- <pack 30log-featured> --
 local class = require "30log"
 
 local common = {}
 common.class = function(name, prototype, parent)
-        local klass = class():extends(parent):extends(prototype)
-        klass.__init = (prototype or {}).init or (parent or {}).init
-        klass.__name = name
-        return klass
+	local klass = class():extend(nil,parent):extend(nil,prototype)
+	klass.init = (prototype or {}).init or (parent or {}).init
+	klass.name = name
+	return klass
 end
 common.instance = function(class, ...)
         return class:new(...)

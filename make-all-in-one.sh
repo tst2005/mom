@@ -17,8 +17,6 @@ while [ $# -gt 0 ]; do
 	esac
 done
 
-#--mod 30log			thirdparty/git/yonaba/30log/30logclean.lua
-
 LUA_PATH="thirdparty/git/tst2005/lua-?/?.lua;;" \
 lua -l gro -l "aio" -e '
 local aio = require "aio"
@@ -47,7 +45,8 @@ mod("secs-featured",		"lib/secs-featured.lua")
 mod("middleclass",		"thirdparty/git/kikito/middleclass/middleclass.lua")
 mod("middleclass-featured",	"lib/middleclass-featured.lua")
 
-mod("30log",			"lib/30log-old.lua")
+mod("30log",			"thirdparty/git/yonaba/30log/30logclean.lua")
+--mod("30log",                    "thirdparty/git/yonaba/30log/30log.lua")
 mod("30log-featured",		"lib/30log-featured.lua")
 
 mod("compat_env",		"thirdparty/git/davidm/lua-compat-env/lua/compat_env.lua")
