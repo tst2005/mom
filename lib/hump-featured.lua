@@ -1,8 +1,6 @@
---error("hump.class modify the global env ! FIXIT")
 
 -- interface for cross class-system compatibility (see https://github.com/bartbes/Class-Commons).
 
-local _M = {}
 local humpclass = require "hump.class"
 local new = assert(humpclass.new)
 
