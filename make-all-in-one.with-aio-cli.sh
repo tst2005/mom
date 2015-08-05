@@ -5,9 +5,8 @@ cd -- "$(dirname "$0")" || exit 1
 # see https://github.com/tst2005/lua-aio
 # wget https://raw.githubusercontent.com/tst2005/lua-aio/aio.lua
 # wget https://raw.githubusercontent.com/tst2005/lua-aio/aio-cli
-
-ALLINONE=./aio.lua
-[ -f "aio.lua" ] || ALLINONE=./thirdparty/git/tst2005/lua-aio/aio-cli
+ALLINONE=./aio-cli
+[ -f "aio-cli" ] || ALLINONE=./thirdparty/git/tst2005/lua-aio/aio-cli
 
 headn=$(grep -nh '^_=nil$' bin/featuredlua |head -n 1 |cut -d: -f1)
 
@@ -18,9 +17,6 @@ while [ $# -gt 0 ]; do
 		-i) ICHECK=y ;;
 	esac
 done
-
-ALLINONE=./aio-cli
-[ -f "aio-cli" ] || ALLINONE=./thirdparty/git/tst2005/lua-aio/aio-cli
 
 LUA_PATH="thirdparty/git/tst2005/lua-?/?.lua;;" \
 "$ALLINONE" \

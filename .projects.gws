@@ -10,5 +10,10 @@ thirdparty/git/davidm/lua-bit-numberlua | https://github.com/davidm/lua-bit-numb
 thirdparty/git/tst2005/lunajson | https://github.com/tst2005/lunajson | https://github.com/grafi-tt/lunajson |
 thirdparty/git/tst2005/strong | https://github.com/tst2005/strong | https://github.com/BlackBulletIV/strong |
 thirdparty/git/tst2005/lua-seedonce | https://github.com/tst2005/lua-seedonce | https://github.com/tst2005/lua-seedonce |
+thirdparty/git/tst2005/lua-isolation | https://github.com/tst2005/lua-isolation | https://github.com/tst2005/lua-isolation |
 thirdparty/git/amireh/lua_cliargs | https://github.com/amireh/lua_cliargs | https://github.com/amireh/lua_cliargs |
 thirdparty/git/gvx/ser | https://github.com/gvx/Ser | https://github.com/gvx/Ser |
+thirdparty/git/pygy/lulpeg | https://github.com/pygy/LuLPeg | https://github.com/pygy/LuLPeg |
+thirdparty/git/pygy/lua-strung | https://github.com/pygy/strung.lua |
+thirdparty/git/pygy/lua-require | https://github.com/pygy/require.lua |
+thirdparty/git/norman/telescope | https://github.com/norman/telescope | https://github.com/norman/telescope |

@@ -3,3 +3,5 @@
 *.tar.gz
 /tmp
 /aio.lua
+/aio-cli
+/aioruntime.lua
