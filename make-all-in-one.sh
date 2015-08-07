@@ -15,7 +15,7 @@ while [ $# -gt 0 ]; do
 	esac
 done
 
-LUA_PATH="?.lua;thirdparty/git/tst2005/lua-?/?.lua;;" \
+LUA_PATH="./?.lua;./thirdparty/lua-?/?.lua;;" \
 lua -e 'require "gro"
 local aio = require "aio"
 local mod, rawmod = aio.mod, aio.rawmod
@@ -47,7 +47,6 @@ mod("middleclass",		"thirdparty/git/kikito/middleclass/middleclass.lua")
 mod("middleclass-featured",	"lib/middleclass-featured.lua")
 
 mod("30log",			"thirdparty/git/yonaba/30log/30logclean.lua")
---mod("30log",			"thirdparty/git/yonaba/30log/30log.lua")
 mod("30log-featured",		"lib/30log-featured.lua")
 
 mod("compat_env",		"thirdparty/lua-compat-env/lua/compat_env.lua")
@@ -57,14 +56,14 @@ mod("hump.class-featured",	"lib/hump-featured.lua")
 
 mod("bit.numberlua",		"thirdparty/lua-bit-numberlua/lmod/bit/numberlua.lua")
 
-mod("lunajson",			"thirdparty/git/tst2005/lunajson/lunajson.lua")
+mod("lunajson",			"thirdparty/lunajson/lunajson.lua")
 mod("utf8",			"thirdparty/lua-utf8/utf8.lua")
 rawmod("cliargs",		"thirdparty/lua_cliargs/src/cliargs.lua")
 mod("ser",			"thirdparty/git/gvx/ser/ser.lua")
 
 mod("lube",			"thirdparty/local/bartbes/lube/lube.lua")
 
-mod("isolation",		"thirdparty/git/tst2005/lua-isolation/isolation.lua")
+mod("isolation",		"thirdparty/lua-isolation/isolation.lua")
 
 --$(if [ -n "$ICHECK" ]; then
 --	echo "--icheck"
