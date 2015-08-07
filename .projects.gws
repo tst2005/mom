@@ -1,19 +1,44 @@
 thirdparty/git/tst2005/lua-aio | https://github.com/tst2005/lua-aio | https://github.com/tst2005/lua-aio |
-thirdparty/git/tst2005/lua-gro | https://github.com/tst2005/lua-gro | https://github.com/tst2005/lua-gro |
-thirdparty/git/tst2005/lua-utf8 | https://github.com/tst2005/lua-utf8 | https://github.com/tst2005/lua-utf8 |
+thirdparty/git/tst2005/lua-seedonce | https://github.com/tst2005/lua-seedonce | https://github.com/tst2005/lua-seedonce |
+thirdparty/git/tst2005/lua-isolation | https://github.com/tst2005/lua-isolation | https://github.com/tst2005/lua-isolation |
+
+## CLASS ##
 thirdparty/git/yonaba/30log | https://github.com/Yonaba/30log | https://github.com/Yonaba/30log |
 thirdparty/git/kikito/middleclass | https://github.com/kikito/middleclass | https://github.com/kikito/middleclass |
 thirdparty/git/vrld/hump | https://github.com/vrld/hump | https://github.com/vrld/hump |
 thirdparty/git/bartbes/class-commons-tests | https://github.com/bartbes/Class-Commons-Tests | https://github.com/bartbes/Class-Commons-Tests |
+thirdparty/git/rxi/classic| https://github.com/rxi/classic | https://github.com/rxi/classic |
+
+## ENV ##
 thirdparty/git/davidm/lua-compat-env | https://github.com/tst2005/lua-compat-env | https://github.com/davidm/lua-compat-env |
+
+## STRICT ##
+thirdparty/git/tst2005/lua-gro | https://github.com/tst2005/lua-gro | https://github.com/tst2005/lua-gro |
+
+## BITWISE ##
 thirdparty/git/davidm/lua-bit-numberlua | https://github.com/davidm/lua-bit-numberlua | https://github.com/davidm/lua-bit-numberlua |
-thirdparty/git/tst2005/lunajson | https://github.com/tst2005/lunajson | https://github.com/grafi-tt/lunajson |
-thirdparty/git/tst2005/strong | https://github.com/tst2005/strong | https://github.com/BlackBulletIV/strong |
-thirdparty/git/tst2005/lua-seedonce | https://github.com/tst2005/lua-seedonce | https://github.com/tst2005/lua-seedonce |
-thirdparty/git/tst2005/lua-isolation | https://github.com/tst2005/lua-isolation | https://github.com/tst2005/lua-isolation |
+
+## UTF8 ##
+thirdparty/git/tst2005/lua-utf8 | https://github.com/tst2005/lua-utf8 | https://github.com/tst2005/lua-utf8 |
+
+## arg ##
 thirdparty/git/amireh/lua_cliargs | https://github.com/amireh/lua_cliargs | https://github.com/amireh/lua_cliargs |
+
+## serialization ##
 thirdparty/git/gvx/ser | https://github.com/gvx/Ser | https://github.com/gvx/Ser |
-thirdparty/git/pygy/lulpeg | https://github.com/pygy/LuLPeg | https://github.com/pygy/LuLPeg |
+
+## parser ##
+thirdparty/git/pygy/lulpeg | https://github.com/tst2005/lulpeg | https://github.com/pygy/LuLPeg |
+
+## tests ##
+#thirdparty/git/norman/telescope | https://github.com/norman/telescope | https://github.com/norman/telescope |
+
+## json ##
+thirdparty/git/tst2005/lunajson | https://github.com/tst2005/lunajson | https://github.com/grafi-tt/lunajson |
+
+## MISC ##
+thirdparty/git/blackbulletiv/strong | https://github.com/tst2005/strong | https://github.com/BlackBulletIV/strong |
 thirdparty/git/pygy/lua-strung | https://github.com/pygy/strung.lua |
 thirdparty/git/pygy/lua-require | https://github.com/pygy/require.lua |
-thirdparty/git/norman/telescope | https://github.com/norman/telescope | https://github.com/norman/telescope |
+
+thirdparty/git/siffiejoe/lua-testy | https://github.com/siffiejoe/lua-testy | https://github.com/siffiejoe/lua-testy |
