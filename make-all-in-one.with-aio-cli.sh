@@ -20,7 +20,7 @@ done
 
 LUA_PATH="thirdparty/git/tst2005/lua-?/?.lua;;" \
 "$ALLINONE" \
---mode "raw" \
+--mode "raw2" \
 --shebang			bin/featuredlua \
 --codehead $headn		bin/featuredlua \
 \
@@ -28,13 +28,12 @@ $(if [ -n "$ICHECK" ]; then
 	echo "--icheckinit"
 fi) \
 \
---mod		preloaded	lib/preloaded.lua \
---mod		gro		thirdparty/git/tst2005/lua-gro/gro.lua \
---require	gro \
+--mod preloaded			lib/preloaded.lua \
+--mod gro			thirdparty/git/tst2005/lua-gro/gro.lua \
 --mod strict			thirdparty/local/unknown/strict/strict.lua \
---require	strict \
 \
 --mod i				lib/i.lua \
+--mod featured			lib/featured.lua \
 --mod generic			lib/generic.lua \
 \
 --mod secs			thirdparty/local/bartbes/secs/secs.lua \
@@ -45,18 +44,18 @@ $( : # --mod class			lib/class.lua \
 --mod middleclass		thirdparty/git/kikito/middleclass/middleclass.lua \
 --mod middleclass-featured	lib/middleclass-featured.lua \
 \
---mod 30log			lib/30log-old.lua \
+--mod 30log			thirdparty/git/yonaba/30log/30logclean.lua \
 --mod 30log-featured		lib/30log-featured.lua \
 \
---mod compat_env		thirdparty/git/davidm/lua-compat-env/lua/compat_env.lua \
+--mod compat_env		thirdparty/lua-compat-env/lua/compat_env.lua \
 \
 --mod hump.class		thirdparty/git/vrld/hump/class.lua \
 \
---mod bit.numberlua		thirdparty/git/davidm/lua-bit-numberlua/lmod/bit/numberlua.lua \
+--mod bit.numberlua		thirdparty/lua-bit-numberlua/lmod/bit/numberlua.lua \
 \
 --mod lunajson			thirdparty/git/tst2005/lunajson/lunajson.lua \
 --mod utf8			thirdparty/git/tst2005/lua-utf8/utf8.lua \
---rawmod cliargs		thirdparty/git/amireh/lua_cliargs/src/cliargs.lua \
+--rawmod cliargs		thirdparty/lua_cliargs/src/cliargs.lua \
 \
 $(if [ -n "$ICHECK" ]; then
 	echo "--icheck"

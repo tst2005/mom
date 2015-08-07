@@ -62,11 +62,16 @@ local function needall(t_names)
 	return return_wrap(r, all_ok)
 end
 
+local function needany(t_names)
+	for i,name in ipairs(t_names) do
+		local v = needone(name)
+		if v then
+			return v
+		end
+	end
+	return false
+end
 
---function _M:needall(t_names)
---	assert(t_names)
---	return needall(t_names)
---end
 
 local readonly = function(...) error("not allowed", 2) end
 
@@ -78,11 +83,19 @@ local t_need_all = setmetatable({
 	__newindex = readonly,
 })
 
+local t_need_any = setmetatable({
+}, {
+	__call = function(_, t_names)
+		return needany(t_names)
+	end,
+	__newindex = readonly,
+--	metatable = false,
+})
+
+
 _M.need = setmetatable({
 	all = t_need_all,
---	any = function(_, k, ...)
---		return needall()
---	end
+	any = t_need_any,
 }, {
 	__call = function(_, name)
 		return needone(name) or generic[name] or false
