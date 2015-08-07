@@ -16,15 +16,15 @@ while [ $# -gt 0 ]; do
 done
 
 LUA_PATH="?.lua;thirdparty/git/tst2005/lua-?/?.lua;;" \
-lua -l gro -l "aio" -e '
+lua -e 'require "gro"
 local aio = require "aio"
-local mod, rawmod, shebang, codehead = aio.mod, aio.rawmod, aio.shebang, aio.codehead
-assert( mod and rawmod and shebang and codehead )
+local mod, rawmod = aio.mod, aio.rawmod
+assert( mod and rawmod )
 
 aio.mode("raw2")
 
-shebang(			"bin/featuredlua")
-codehead('"$headn"',		"bin/featuredlua")
+aio.shebang(			"bin/featuredlua")
+aio.codehead('"$headn"',	"bin/featuredlua")
 
 --$(if [ -n "$ICHECK" ]; then
 --        echo "--icheckinit"
@@ -32,7 +32,7 @@ codehead('"$headn"',		"bin/featuredlua")
 
 mod("preloaded",		"lib/preloaded.lua")
 mod("gro",			"thirdparty/git/tst2005/lua-gro/gro.lua")
-mod("aio",			"aio.lua")
+mod("aio",			"aio.lua") -- thirdparty/git/tst2005/lua-aio/aio.lua
 
 mod("strict",			"thirdparty/local/unknown/strict/strict.lua")
 
@@ -46,7 +46,7 @@ mod("middleclass",		"thirdparty/git/kikito/middleclass/middleclass.lua")
 mod("middleclass-featured",	"lib/middleclass-featured.lua")
 
 mod("30log",			"thirdparty/git/yonaba/30log/30logclean.lua")
---mod("30log",                    "thirdparty/git/yonaba/30log/30log.lua")
+--mod("30log",			"thirdparty/git/yonaba/30log/30log.lua")
 mod("30log-featured",		"lib/30log-featured.lua")
 
 mod("compat_env",		"thirdparty/git/davidm/lua-compat-env/lua/compat_env.lua")
