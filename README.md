@@ -1,11 +1,13 @@
-## What is MOM ?
+What is MOM ?
+=============
 
 It was a minimal Lua Framework.
 Now it growing...
 The featured approch is mainly usefull to embedding lot of usefull dependencies inside only one file.
 This file should be also use as a script for command line use (like shell script but in lua).
 
-## At the beginning
+At the beginning
+----------------
 
 I see [moonscript](http://moonscript.org/) and the first [sample that uses class](http://moonscript.org/#overview) :
 
@@ -43,7 +45,8 @@ local i = class.instance(Person) -- better with Person() or Person:new() ?
 And it print `Hello, I am MoonScript!` even it's not the case.
 
 
-## Why this name ?
+Why this name ?
+---------------
 
 Lua is basic, like a child.
 I think we need something more adult like a parent (mother or father).
@@ -53,7 +56,8 @@ moonscript start by `mo*` I choose `mom`.
 It's short, easy to remember, easy to call (`require "mom"`)
 Search resulsts with `mom.lua` or `lua mom` on github and google show me that nothing seems exists.
 
-# What is the plan to conquer the world ?
+What is the plan to conquer the world ?
+=======================================
 
 Mainly :
  * a default class system
@@ -69,7 +73,8 @@ After :
  * minifing the result...
 
 
-## License
+License
+=======
 
  * My code will be released under MIT License.
 
