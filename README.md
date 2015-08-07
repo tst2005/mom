@@ -76,5 +76,7 @@ After :
 License
 =======
 
- * My code will be released under MIT License.
+ * Code released under [MIT License][MIT].
+
+[MIT]: http://opensource.org/licenses/MIT
 
