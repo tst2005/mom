@@ -32,6 +32,8 @@ codehead('"$headn"',		"bin/featuredlua")
 
 mod("preloaded",		"lib/preloaded.lua")
 mod("gro",			"thirdparty/git/tst2005/lua-gro/gro.lua")
+mod("aio",			"aio.lua")
+
 mod("strict",			"thirdparty/local/unknown/strict/strict.lua")
 
 mod("i", 			"lib/i.lua")
