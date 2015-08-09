@@ -18,6 +18,8 @@ thirdparty/lua_cliargs			| https://github.com/amireh/lua_cliargs			| https://git
 ## parser ##
 thirdparty/lulpeg			| ssh://git@github.com/tst2005/lulpeg.git		| https://github.com/pygy/LuLPeg |
 
+## featured ##
+thirdparty/lua-featured			| ssh://git@github.com/tst2005/lua-featured.git 	 https://github.com/tst2005/lua-featured |
 
 #____________________________________________________________________________________________________________________________________#
 
