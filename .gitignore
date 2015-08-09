@@ -1,9 +1,3 @@
 /\.cache\.gws
-/thirdparty/git/
-/thirdparty/lua[_-]*
-/thirdparty/luna*
-*.tar.gz
 /tmp
-/aio.lua
-/aio-cli
 /aioruntime.lua
