@@ -25,6 +25,10 @@ thirdparty/lua-featured			| ssh://git@github.com/tst2005/lua-featured.git 	| htt
 ## JSON ##
 thirdparty/lunajson			| ssh://git@github.com/tst2005/lunajson.git		| https://github.com/grafi-tt/lunajson |
 
+## TESTS ##
+thirdparty/lua-cwtest			| ssh://git@github.com/tst2005/cwtest.git		| https://github.com/catwell/cwtest		|
+# thirdparty/git/siffiejoe/lua-testy | https://github.com/siffiejoe/lua-testy | https://github.com/siffiejoe/lua-testy |
+
 #____________________________________________________________________________________________________________________________________#
 
 ## CLASS ##
@@ -50,5 +54,3 @@ thirdparty/git/gvx/ser			| https://github.com/gvx/Ser				| https://github.com/gv
 # thirdparty/git/blackbulletiv/strong	| https://github.com/tst2005/strong		| https://github.com/BlackBulletIV/strong |
 # thirdparty/git/pygy/lua-strung	| https://github.com/pygy/strung.lua		|
 # thirdparty/git/pygy/lua-require	| https://github.com/pygy/require.lua		|
-
-# thirdparty/git/siffiejoe/lua-testy | https://github.com/siffiejoe/lua-testy | https://github.com/siffiejoe/lua-testy |
