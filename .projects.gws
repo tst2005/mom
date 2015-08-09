@@ -16,7 +16,7 @@ thirdparty/lua-bit-numberlua		| ssh://git@github.com/tst2005/lua-bit-numberlua.g
 thirdparty/lua_cliargs			| https://github.com/amireh/lua_cliargs			| https://github.com/amireh/lua_cliargs |
 
 ## parser ##
-thirdparty/git/pygy/lulpeg		| ssh://git@github.com/tst2005/lulpeg.git		| https://github.com/pygy/LuLPeg |
+thirdparty/lulpeg			| ssh://git@github.com/tst2005/lulpeg.git		| https://github.com/pygy/LuLPeg |
 
 
 #____________________________________________________________________________________________________________________________________#
