@@ -420,13 +420,6 @@ end
 ]])
 end
 
-
-local function delayrequire(modname)
-	return setmetatable({}, {
-		__
-	})
-end
-
 local function cmd_shebang(file)
 	local shebang = get_shebang(head(file, 1).."\n")
 	print_no_nl( shebang and shebang.."\n" or "")
@@ -821,9 +814,16 @@ function common.instance(class, ...)
 end
 common.__BY = "secs"
 
-pcall(function() require("i"):register("secs", common) end)
-local _M = {class = assert(common.class), instance = assert(common.instance), __BY = assert(common.__BY)}
---_M.common = common
+local _M = setmetatable({}, {
+	__call = function(_, ...)
+		return common.class(...)
+	end,
+	__index = common,
+	__newindex = function() error("read-only", 2) end,
+	__metatable = false,
+})
+
+--pcall(function() require("i"):register("secs", _M) end)
 return _M
 ]===]):gsub('\\([%]%[]===)\\([%]%[])','%1%2')
 assert(not sources["middleclass"])sources["middleclass"]=([===[-- <pack middleclass> --
@@ -1044,9 +1044,16 @@ if common.__BY == nil then
 	common.__BY = "middleclass"
 end
 
-pcall(function() require("classcommons2"):register("middleclass", common) end)
-local _M = {class = assert(common.class), instance = assert(common.instance), __BY = assert(common.__BY)}
---_M.common = common
+local _M = setmetatable({}, {
+	__call = function(_, ...)
+		return common.class(...)
+	end,
+	__index = common,
+	__newindex = function() error("read-only", 2) end,
+	__metatable = false,
+})
+
+--pcall(function() require("i"):register("middleclass", _M) end)
 return _M
 ]===]):gsub('\\([%]%[]===)\\([%]%[])','%1%2')
 assert(not sources["30log"])sources["30log"]=([===[-- <pack 30log> --
@@ -1198,10 +1205,16 @@ common.instance = function(class, ...)
 end
 common.__BY = "30log"
 
-pcall(function() require("i"):register("30log", common) end)
+local _M = setmetatable({}, {
+	__call = function(_, ...)
+		return common.class(...)
+	end,
+	__index = common,
+	__newindex = function() error("read-only", 2) end,
+	__metatable = false,
+})
 
-local _M = {class = assert(common.class), instance = assert(common.instance), __BY = assert(common.__BY)}
---_M.common = common
+--pcall(function() require("i"):register("30log", _M) end)
 return _M
 ]===]):gsub('\\([%]%[]===)\\([%]%[])','%1%2')
 assert(not sources["hump.class"])sources["hump.class"]=([===[-- <pack hump.class> --
@@ -1312,14 +1325,31 @@ local new = assert(humpclass.new)
 
 local common = {}
 function common.class(name, prototype, parent)
-	return new{__includes = {prototype, parent}}
+	local c = new{__includes = {prototype, parent}}
+	assert(c.new==nil)
+	function c:new(...) -- implement the class:new => new instance
+		return c(...)
+	end
+	return c
 end
 function common.instance(class, ...)
         return class(...)
 end
 common.__BY = "hump.class"
-pcall(function() require("i"):register("hump.class", common) end)
-return common
+
+
+
+local _M = setmetatable({}, {
+	__call = function(_, ...)
+		return common.class(...)
+	end,
+	__index = common,
+	__newindex = function() error("read-only", 2) end,
+	__metatable = false,
+})
+
+--pcall(function() require("i"):register("hump.class", _M) end)
+return _M
 ]===]):gsub('\\([%]%[]===)\\([%]%[])','%1%2')
 assert(not sources["compat_env"])sources["compat_env"]=([===[-- <pack compat_env> --
 --[[
@@ -2331,6 +2361,27 @@ searchers       table: 0x3059330
 
 
 \]===\]):gsub('\\([%]%[]===)\\([%]%[])','%1%2')
+assert(not sources["isolation.defaults"])sources["isolation.defaults"]=(\[===\[-- <pack isolation.defaults> --
+local defaultconfig = {}
+defaultconfig.package_wanted = {
+	"bit32", "coroutine", "debug", "io", "math", "os", "string", "table",
+}
+defaultconfig.g_content = {
+	"_VERSION", "assert", "error", "ipairs", "next", "pairs",
+	"pcall", "select", "tonumber", "tostring", "type", "unpack","xpcall",
+	"getmetatable", "setmetatable",
+	"print",
+}
+--collectgarbage --dofile --getfenv --load --loadfile --loadstring --module
+--rawequal --rawget --rawset --setfenv
+
+defaultconfig.package = "all"
+
+local _M = {
+	defaultconfig = defaultconfig,
+}
+return _M
+\]===\]):gsub('\\([%]%[]===)\\([%]%[])','%1%2')
 assert(not sources["restricted.debug"])sources["restricted.debug"]=(\[===\[-- <pack restricted.debug> --
 
 local _debug = {}
@@ -2342,7 +2393,7 @@ return {}
 assert(not sources["restricted.io"])sources["restricted.io"]=(\[===\[-- <pack restricted.io> --
 local io = require("io")
 
-local _io = {}
+local _M = {}
 --io.close
 --io.flush
 --io.input
@@ -2357,29 +2408,42 @@ local _io = {}
 --io.tmpfile
 --io.type
 --io.write
-return _io
+return _M
 \]===\]):gsub('\\([%]%[]===)\\([%]%[])','%1%2')
 assert(not sources["restricted.os"])sources["restricted.os"]=(\[===\[-- <pack restricted.os> --
 local os = require("os")
 
-local _os = {}
-_os.clock	= os.clock
-_os.date	= os.date
-_os.difftime	= os.difftime
---_os.execute	=
---_os.exit	= os.exit
-_os.getenv	= os.getenv -- expose the FS
---_os.remove	=
---_os.rename	=
---_os.setlocale	= 
-_os.time	= os.time
---_os.tmpname	=
+local _M = {}
 
-return _os
+for k,v in pairs{
+	"clock",
+	"date", -- FIXME: On non-POSIX systems, this function may be not thread safe
+	"difftime",
+--execute
+--exit
+--getenv
+--remove
+--rename
+--setlocale
+	"time",
+--tmpname
+} do
+	_M[k]=v
+end
+
+return _M
 \]===\]):gsub('\\([%]%[]===)\\([%]%[])','%1%2')
 assert(not sources["restricted.table"])sources["restricted.table"]=(\[===\[-- <pack restricted.table> --
+local table = require "table"
 
-return require("table") -- lock metatable ?
+local _M = {}
+_M.insert = table.insert
+_M.maxn = table.maxn
+_M.remove = table.remove
+_M.sort = table.sort
+_M.unpack = table.pack
+
+return _M
 \]===\]):gsub('\\([%]%[]===)\\([%]%[])','%1%2')
 assert(not sources["restricted._file"])sources["restricted._file"]=(\[===\[-- <pack restricted._file> --
 local file = require("file")
@@ -2395,55 +2459,61 @@ local _file = {}
 return _file
 \]===\]):gsub('\\([%]%[]===)\\([%]%[])','%1%2')
 assert(not sources["restricted.string"])sources["restricted.string"]=(\[===\[-- <pack restricted.string> --
--- string = (table)
--- metatable(string) = table.__index = string
 
-return string -- lock metatable ?
+local string = require "string"
+local _M = {}
+for k,v in pairs{
+	"byte",
+	"char",
+	"find",
+	"format",
+	"gmatch",
+	"gsub",
+	"len",
+	"lower",
+	"match",
+	"reverse",
+	"sub",
+	"upper",
+} do
+	_M[k]=v
+end
+
+return setmetatable({}, {
+	__index=_M,
+	__newindex=function() error("readonly", 2) end,
+	__metatable=false,
+})
 \]===\]):gsub('\\([%]%[]===)\\([%]%[])','%1%2')
 assert(not sources["restricted.coroutine"])sources["restricted.coroutine"]=(\[===\[-- <pack restricted.coroutine> --
+local coroutine = require "coroutine"
+local _M = {
+	create = coroutine.create,
+	resume = coroutine.resume,
+	running = coroutine.running,
+	status = coroutine.status,
+	wrap = coroutine.wrap,
+	yield = coroutine.yield,
+}
 
-local _debug = {}
-return _debug
+return _M
 \]===\]):gsub('\\([%]%[]===)\\([%]%[])','%1%2')
 assert(not sources["restricted.math"])sources["restricted.math"]=(\[===\[-- <pack restricted.math> --
 local math = require("math")
-local _math = {}
-for k,v in pairs(math) do
-	_math[k] = v
+local _M = {}
+
+for k,v in pairs({
+	"abs", "acos", "asin", "atan", "atan2", "ceil", "cos", "cosh",
+	"deg", "exp", "floor", "fmod", "frexp", "huge", "ldexp", "log",
+	"log10", "max", "min", "modf", "pi", "pow", "rad", "random",
+	--"randomseed",
+	"sin", "sinh", "sqrt", "tan", "tanh",
+}) do
+	_M[k] = v
 end
 
---math.abs
---math.acos
---math.asin
---math.atan
---math.atan2
---math.ceil
---math.cos
---math.cosh
---math.deg
---math.exp
---math.floor
---math.fmod
---math.frexp
---math.huge
---math.ldexp
---math.log
---math.log10
---math.max
---math.min
---math.modf
---math.pi
---math.pow
---math.rad
---math.random
---math.randomseed
---math.sin
---math.sinh
---math.sqrt
---math.tan
---math.tanh
-
-return _math -- lock metatable ?
+-- lock metatable ?
+return _M
 \]===\]):gsub('\\([%]%[]===)\\([%]%[])','%1%2')
 assert(not sources["compat_env"])sources["compat_env"]=(\[===\[-- <pack compat_env> --
 --[[
@@ -3209,12 +3279,11 @@ local function cross_setup_g_package(g, package, config)
 
 end
 
-local defaultconfig = {}
 
 local function new_env(_G, conf)
 	assert(_G)
 	local config = {}
-	for k,v in pairs(defaultconfig) do config[k]=v end
+	for k,v in pairs(_M.defaultconfig) do config[k]=v end
 	for k,v in pairs(conf) do config[k]=v end
 	assert( config.package )
 	assert( config.package_wanted )
@@ -3241,24 +3310,7 @@ local function run(f, env)
 	return ce.load(f, nil, nil, newenv)
 end
 
-
-defaultconfig.package_wanted = {
-	"bit32", "coroutine", "debug", "io", "math", "os", "string", "table",
-}
-defaultconfig.g_content = {
-	"_VERSION", "assert",
-	--collectgarbage --dofile
-	"error",
-	--getfenv
-	"getmetatable", "ipairs",
-	--load --loadfile --loadstring --module
-	"next", "pairs", "pcall", "print",
-	--rawequal --rawget --rawset
-	"select",
-	--setfenv
-	"setmetatable", "tonumber", "tostring", "type", "unpack", "xpcall",
-}
-defaultconfig.package = "all"
+local defaultconfig = require "isolation.defaults".defaultconfig
 
 local _M = {
 	new = new_env,

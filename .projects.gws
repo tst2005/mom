@@ -16,10 +16,14 @@ thirdparty/lua-bit-numberlua		| ssh://git@github.com/tst2005/lua-bit-numberlua.g
 thirdparty/lua_cliargs			| https://github.com/amireh/lua_cliargs			| https://github.com/amireh/lua_cliargs |
 
 ## parser ##
-thirdparty/lulpeg			| ssh://git@github.com/tst2005/lulpeg.git		| https://github.com/pygy/LuLPeg |
+thirdparty/lulpeg			| ssh://git@github.com/tst2005/lulpeg.git		| https://github.com/pygy/LuLPeg		|
+thirdparty/lpeglj			| ssh://git@github.com/tst2005/lpeglj.git		| https://github.com/sacek/LPegLJ		|
 
 ## featured ##
-thirdparty/lua-featured			| ssh://git@github.com/tst2005/lua-featured.git 	 https://github.com/tst2005/lua-featured |
+thirdparty/lua-featured			| ssh://git@github.com/tst2005/lua-featured.git 	| https://github.com/tst2005/lua-featured |
+
+## JSON ##
+thirdparty/lunajson			| ssh://git@github.com/tst2005/lunajson.git		| https://github.com/grafi-tt/lunajson |
 
 #____________________________________________________________________________________________________________________________________#
 
@@ -28,7 +32,7 @@ thirdparty/git/yonaba/30log		| https://github.com/Yonaba/30log			| https://githu
 thirdparty/git/kikito/middleclass	| https://github.com/kikito/middleclass			| https://github.com/kikito/middleclass |
 thirdparty/git/vrld/hump		| https://github.com/vrld/hump				| https://github.com/vrld/hump |
 thirdparty/git/bartbes/class-commons-tests | https://github.com/bartbes/Class-Commons-Tests	| https://github.com/bartbes/Class-Commons-Tests |
-thirdparty/git/rxi/classic		| https://github.com/rxi/classic			| https://github.com/rxi/classic |
+#thirdparty/lua-classic			| ssh://git@github.com/tst2005/lua-classic.git		| https://github.com/rxi/classic |
 
 ## UTF8 ##
 thirdparty/lua-utf8			| https://github.com/tst2005/lua-utf8			| https://github.com/tst2005/lua-utf8 |
@@ -38,9 +42,6 @@ thirdparty/git/gvx/ser			| https://github.com/gvx/Ser				| https://github.com/gv
 
 ## tests ##
 # thirdparty/git/norman/telescope	| https://github.com/norman/telescope			| https://github.com/norman/telescope |
-
-## json ##
-thirdparty/lunajson			| ssh://git@github.com/tst2005/lunajson.git		| https://github.com/grafi-tt/lunajson |
 
 ## network ##
 # thirdparty/git/bartbes/love-misc-libs | ssh://git@github.com/tst2005/love-misc-libs.git	| https://github.com/bartbes/love-misc-libs |
