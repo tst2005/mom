@@ -29,6 +29,10 @@ thirdparty/lunajson			| ssh://git@github.com/tst2005/lunajson.git		| https://git
 thirdparty/lua-cwtest			| ssh://git@github.com/tst2005/cwtest.git		| https://github.com/catwell/cwtest		|
 # thirdparty/git/siffiejoe/lua-testy | https://github.com/siffiejoe/lua-testy | https://github.com/siffiejoe/lua-testy |
 
+# MISC #
+thirdparty/lua-penlight			| ssh://git@github.com/tst2005/lua-penlight.git		| https://github.com/stevedonovan/Penlight	|
+
+
 #____________________________________________________________________________________________________________________________________#
 
 ## CLASS ##
