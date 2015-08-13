@@ -97,7 +97,10 @@ _M.need = setmetatable({
 	all = t_need_all,
 	any = t_need_any,
 }, {
-	__call = function(_, name)
+	__call = function(_, name, name2)
+		if name == _M then
+			name = name2
+		end
 		return needone(name) or generic[name] or false
 	end,
 --	__index = function(_, k, ...)
