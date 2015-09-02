@@ -73,7 +73,7 @@ local function needany(t_names)
 end
 
 
-local readonly = function(...) error("not allowed", 2) end
+local readonly = function() error("not allowed", 2) end
 
 local t_need_all = setmetatable({
 }, {
