@@ -25,6 +25,7 @@ local function list(sep)
 end
 
 _M.erase = erase
+_M.remove = erase
 _M.disable = disable
 _M.exists = exists
 _M.list = list
