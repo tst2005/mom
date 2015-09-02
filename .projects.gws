@@ -13,7 +13,8 @@ thirdparty/lua-bit-numberlua		| ssh://git@github.com/tst2005/lua-bit-numberlua.g
 
 
 ## arg ##
-thirdparty/lua_cliargs			| https://github.com/amireh/lua_cliargs			| https://github.com/amireh/lua_cliargs |
+thirdparty/lua_cliargs			| https://github.com/amireh/lua_cliargs			| https://github.com/amireh/lua_cliargs		|
+thirdparty/lua-alt-getopt		| ssh://git@github.com/tst2005/lua-alt-getopt.git	| https://github.com/cheusov/lua-alt-getopt	|
 
 ## parser ##
 thirdparty/lulpeg			| ssh://git@github.com/tst2005/lulpeg.git		| https://github.com/pygy/LuLPeg		|
@@ -55,6 +56,7 @@ thirdparty/git/gvx/ser			| https://github.com/gvx/Ser				| https://github.com/gv
 # thirdparty/git/bartbes/love-misc-libs | ssh://git@github.com/tst2005/love-misc-libs.git	| https://github.com/bartbes/love-misc-libs |
 
 ## MISC ##
-# thirdparty/git/blackbulletiv/strong	| https://github.com/tst2005/strong		| https://github.com/BlackBulletIV/strong |
+# thirdparty/strong			| https://github.com/tst2005/strong			| https://github.com/BlackBulletIV/strong |
+
 # thirdparty/git/pygy/lua-strung	| https://github.com/pygy/strung.lua		|
 # thirdparty/git/pygy/lua-require	| https://github.com/pygy/require.lua		|
