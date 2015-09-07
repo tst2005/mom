@@ -1,4 +1,4 @@
-#!/bin/sh
+#!/usr/bin/env lua
 
 _=[[
 	for name in luajit lua5.3 lua-5.3 lua5.2 lua-5.2 lua5.1 lua-5.1 lua; do
@@ -11,10 +11,8 @@ _=[[
 	LUA_PATH='./?.lua;./?/init.lua;./lib/?.lua;./lib/?/init.lua;;'
 	exec "$LUA" "$0" "$@"
 	exit $?
-]]
-_=nil
+]] and nil
 ---------------- lua code ----------------
-
 --print(_VERSION)
 if not pcall(require, "i") then
 	print("nothing found")
@@ -25,7 +23,9 @@ print("something seems embeded")
 require "strict" 
 
 local i = require"i"
-local common = i:need("secs")
+local common = i.need("secs")
+assert( common == i:need "secs" )
+
 local class, instance = common.class, common.instance
 
 require"compat_env"

@@ -1,3 +1,4 @@
 /\.cache\.gws
 /tmp
 /aioruntime.lua
+/make-all-in-one*.sh

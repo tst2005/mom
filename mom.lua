@@ -1,4 +1,4 @@
-#!/bin/sh
+#!/usr/bin/env lua
 
 _=[[
 	for name in luajit lua5.3 lua-5.3 lua5.2 lua-5.2 lua5.1 lua-5.1 lua; do
@@ -11,8 +11,7 @@ _=[[
 	LUA_PATH='./?.lua;./?/init.lua;./lib/?.lua;./lib/?/init.lua;;'
 	exec "$LUA" "$0" "$@"
 	exit $?
-]]
-_=nil
+]] and nil
 do local sources, priorities = {}, {};assert(not sources["preloaded"])sources["preloaded"]=([===[-- <pack preloaded> --
 local _M = {}
 
@@ -41,6 +40,7 @@ local function list(sep)
 end
 
 _M.erase = erase
+_M.remove = erase
 _M.disable = disable
 _M.exists = exists
 _M.list = list
@@ -163,6 +163,7 @@ end
 
 local function head(dirfile, n)
 	assert(dirfile)
+	if n < 1 then return "" end
 	local fd = assert(io.open(dirfile, "r"))
 	local data = nil
 	for i = 1,n,1 do
@@ -184,12 +185,12 @@ local function extractshebang(data)
 end
 
 local function dropshebang(data)
-	local data, shebang = extractshebang(data)
-	return data
+	local data2, shebang = extractshebang(data)
+	return data2
 end
 
 local function get_shebang(data)
-	local data, shebang = extractshebang(data)
+	local data2, shebang = extractshebang(data)
 	return shebang or false
 end
 
@@ -244,7 +245,7 @@ local function rawpack_module(modname, modpath)
 --	local quote       = function(s) return s:gsub('([%]%[\]===\[%]%[])','\\%1') end
 --	local unquotecode = [[:gsub('\\([%]%[\]===\[%]%[])','%1')]]
 
-	local b = [[do local loadstring=loadstring;(function(name, rawcode)require"package".preload[name]=function(...)return assert(loadstring(rawcode))(...)end;end)("]] .. modname .. [[", (]].."[["
+	local b = [[do local loadstring=_G.loadstring or _G.load;(function(name, rawcode)require"package".preload[name]=function(...)return assert(loadstring(rawcode), "loadstring: "..name.." failed")(...)end;end)("]] .. modname .. [[", (]].."[["
 	local e = "]])".. unquotecode .. ")end"
 
 --	if deny_package_access then
@@ -288,6 +289,7 @@ local function rawpack2_module(modname, modpath)
 
 	if not rawpack2_init_done then
 		rawpack2_init_done = not rawpack2_init_done
+		if rawpack2_finish_done then rawpack2_finish_done = false end
 		rawpack2_init()
 	end
 	local b = [[assert(not sources["]] .. modname .. [["])]]..[[sources["]] .. modname .. [["]=(]].."\[===\["
@@ -305,7 +307,7 @@ end
 --local function rawpack2_finish()
 --	print_no_nl(
 --[[
---local loadstring=loadstring; local preload = require"package".preload
+--local loadstring=_G.loadstring or _G.load; local preload = require"package".preload
 --for name, rawcode in pairs(sources) do preload[name]=function(...)return loadstring(rawcode)(...)end end
 --end;
 --]]
@@ -317,10 +319,10 @@ local function rawpack2_finish()
 [[
 local add
 if not pcall(function() add = require"aioruntime".add end) then
-        local loadstring=loadstring; local preload = require"package".preload
+        local loadstring=_G.loadstring or _G.load; local preload = require"package".preload
         add = function(name, rawcode)
 		if not preload[name] then
-		        preload[name] = function(...) return loadstring(rawcode)(...) end
+		        preload[name] = function(...) return assert(loadstring(rawcode), "loadstring: "..name.." failed")(...) end
 		else
 			print("WARNING: overwrite "..name)
 		end
@@ -367,7 +369,7 @@ local function pack_module(modname, modpath)
 end
 
 local function datapack(data, tagsep)
-	local tagsep = tagsep and tagsep or ''
+	tagsep = tagsep or ''
 	local c = data:sub(1,1)
 	if c == "\n" or c == "\r" then
 		return "["..tagsep.."["..c..data.."]"..tagsep.."]"
@@ -649,7 +651,7 @@ local function needany(t_names)
 end
 
 
-local readonly = function(...) error("not allowed", 2) end
+local readonly = function() error("not allowed", 2) end
 
 local t_need_all = setmetatable({
 }, {
@@ -673,7 +675,10 @@ _M.need = setmetatable({
 	all = t_need_all,
 	any = t_need_any,
 }, {
-	__call = function(_, name)
+	__call = function(_, name, name2)
+		if name == _M then
+			name = name2
+		end
 		return needone(name) or generic[name] or false
 	end,
 --	__index = function(_, k, ...)
@@ -726,9 +731,11 @@ assert(not sources["featured"])sources["featured"]=([===[-- <pack featured> --
 local _M = {}
 
 local featured_keys = {
-	["class-system"] = {"30log-featured", "secs-featured", "middleclass-featured"},
-	["lpeg"] = {"lpeg", "lulpeg"},
+	["class-system"] = {"30log-featured", "secs-featured", "middleclass-featured", "hump.class-featured", },
+	["lpeg"] = {"lpeg", "lulpeg", "lpeglj", },
+	["json"] = {"lunajson-featured", },
 }
+
 featured_keys.class = function()
 	return (require "i".need.any(featured_keys["class-system"]) or {}).class
 end
@@ -1375,6 +1382,7 @@ if IS_52_LOAD then
   M.load     = _G.load
   M.loadfile = _G.loadfile
 else
+  local setfenv = _G.setfenv
   -- 5.2 style `load` implemented in 5.1
   function M.load(ld, source, mode, env)
     local f
@@ -2050,7 +2058,6 @@ do local sources, priorities = {}, {};assert(not sources["newpackage"])sources["
 
 -- ----------------------------------------------------------
 
---_COMPAT51 = "Compat-5.1 R5"
 --local loadlib = loadlib
 --local setmetatable = setmetatable
 --local setfenv = setfenv
@@ -2367,13 +2374,8 @@ defaultconfig.package_wanted = {
 	"bit32", "coroutine", "debug", "io", "math", "os", "string", "table",
 }
 defaultconfig.g_content = {
-	"_VERSION", "assert", "error", "ipairs", "next", "pairs",
-	"pcall", "select", "tonumber", "tostring", "type", "unpack","xpcall",
-	"getmetatable", "setmetatable",
-	"print",
+	"table", "string",
 }
---collectgarbage --dofile --getfenv --load --loadfile --loadstring --module
---rawequal --rawget --rawset --setfenv
 
 defaultconfig.package = "all"
 
@@ -2415,9 +2417,9 @@ local os = require("os")
 
 local _M = {}
 
-for k,v in pairs{
+for i,k in ipairs{
 	"clock",
-	"date", -- FIXME: On non-POSIX systems, this function may be not thread safe
+--	"date", -- See [date_unsafe] FIXME: On non-POSIX systems, this function may be not thread safe
 	"difftime",
 --execute
 --exit
@@ -2428,8 +2430,14 @@ for k,v in pairs{
 	"time",
 --tmpname
 } do
-	_M[k]=v
+	_M[k]=os[k]
 end
+
+-- os.date is unsafe : The Lua 5.3 manuals say "On non-POSIX systems, this function may be not thread safe"
+-- See also : https://github.com/APItools/sandbox.lua/issues/7#issuecomment-129259145
+-- > I believe it was intentional. See the comment. https://github.com/APItools/sandbox.lua/blob/a4c0a9ad3d3e8b5326b53188b640d69de2539313/sandbox.lua#L48
+-- > Probably based on http://lua-users.org/wiki/SandBoxes
+-- >     os.date - UNSAFE - This can crash on some platforms (undocumented). For example, os.date'%v'. It is reported that this will be fixed in 5.2 or 5.1.3.
 
 return _M
 \]===\]):gsub('\\([%]%[]===)\\([%]%[])','%1%2')
@@ -2441,7 +2449,8 @@ _M.insert = table.insert
 _M.maxn = table.maxn
 _M.remove = table.remove
 _M.sort = table.sort
-_M.unpack = table.pack
+_M.unpack = table.unpack
+_M.pack = table.pack
 
 return _M
 \]===\]):gsub('\\([%]%[]===)\\([%]%[])','%1%2')
@@ -2462,7 +2471,7 @@ assert(not sources["restricted.string"])sources["restricted.string"]=(\[===\[-- 
 
 local string = require "string"
 local _M = {}
-for k,v in pairs{
+for i,k in pairs{
 	"byte",
 	"char",
 	"find",
@@ -2476,7 +2485,7 @@ for k,v in pairs{
 	"sub",
 	"upper",
 } do
-	_M[k]=v
+	_M[k]=string[k]
 end
 
 return setmetatable({}, {
@@ -2502,719 +2511,25 @@ assert(not sources["restricted.math"])sources["restricted.math"]=(\[===\[-- <pac
 local math = require("math")
 local _M = {}
 
-for k,v in pairs({
+for i,k in ipairs({
 	"abs", "acos", "asin", "atan", "atan2", "ceil", "cos", "cosh",
 	"deg", "exp", "floor", "fmod", "frexp", "huge", "ldexp", "log",
 	"log10", "max", "min", "modf", "pi", "pow", "rad", "random",
 	--"randomseed",
 	"sin", "sinh", "sqrt", "tan", "tanh",
 }) do
-	_M[k] = v
+	_M[k] = math[k]
 end
 
 -- lock metatable ?
 return _M
 \]===\]):gsub('\\([%]%[]===)\\([%]%[])','%1%2')
-assert(not sources["compat_env"])sources["compat_env"]=(\[===\[-- <pack compat_env> --
---[[
-  compat_env - see README for details.
-  (c) 2012 David Manura.  Licensed under Lua 5.1/5.2 terms (MIT license).
---]]
-
-local M = {_TYPE='module', _NAME='compat_env', _VERSION='0.2.2.20120406'}
-
-local function check_chunk_type(s, mode)
-  local nmode = mode or 'bt' 
-  local is_binary = s and #s > 0 and s:byte(1) == 27
-  if is_binary and not nmode:match'b' then
-    return nil, ("attempt to load a binary chunk (mode is '%s')"):format(mode)
-  elseif not is_binary and not nmode:match't' then
-    return nil, ("attempt to load a text chunk (mode is '%s')"):format(mode)
-  end
-  return true
-end
-
-local IS_52_LOAD = pcall(load, '')
-if IS_52_LOAD then
-  M.load     = _G.load
-  M.loadfile = _G.loadfile
-else
-  -- 5.2 style `load` implemented in 5.1
-  function M.load(ld, source, mode, env)
-    local f
-    if type(ld) == 'string' then
-      local s = ld
-      local ok, err = check_chunk_type(s, mode)
-      if not ok then return ok, err end
-      local err; f, err = loadstring(s, source)
-      if not f then return f, err end
-    elseif type(ld) == 'function' then
-      local ld2 = ld
-      if (mode or 'bt') ~= 'bt' then
-        local first = ld()
-        local ok, err = check_chunk_type(first, mode)
-        if not ok then return ok, err end
-        ld2 = function()
-          if first then
-            local chunk=first; first=nil; return chunk
-          else return ld() end
-        end
-      end
-      local err; f, err = load(ld2, source); if not f then return f, err end
-    else
-      error(("bad argument #1 to 'load' (function expected, got %s)")
-            :format(type(ld)), 2)
-    end
-    if env then setfenv(f, env) end
-    return f
-  end
-
-  -- 5.2 style `loadfile` implemented in 5.1
-  function M.loadfile(filename, mode, env)
-    if (mode or 'bt') ~= 'bt' then
-      local ioerr
-      local fh, err = io.open(filename, 'rb'); if not fh then return fh,err end
-      local function ld()
-        local chunk; chunk,ioerr = fh:read(4096); return chunk
-      end
-      local f, err = M.load(ld, filename and '@'..filename, mode, env)
-      fh:close()
-      if not f then return f, err end
-      if ioerr then return nil, ioerr end
-      return f
-    else
-      local f, err = loadfile(filename); if not f then return f, err end
-      if env then setfenv(f, env) end
-      return f
-    end
-  end
-end
-
-if _G.setfenv then -- Lua 5.1
-  M.setfenv = _G.setfenv
-  M.getfenv = _G.getfenv
-else -- >= Lua 5.2
-  local debug = require "debug"
-  -- helper function for `getfenv`/`setfenv`
-  local function envlookup(f)
-    local name, val
-    local up = 0
-    local unknown
-    repeat
-      up=up+1; name, val = debug.getupvalue(f, up)
-      if name == '' then unknown = true end
-    until name == '_ENV' or name == nil
-    if name ~= '_ENV' then
-      up = nil
-      if unknown then
-        error("upvalues not readable in Lua 5.2 when debug info missing", 3)
-      end
-    end
-    return (name == '_ENV') and up, val, unknown
-  end
-
-  -- helper function for `getfenv`/`setfenv`
-  local function envhelper(f, name)
-    if type(f) == 'number' then
-      if f < 0 then
-        error(("bad argument #1 to '%s' (level must be non-negative)")
-              :format(name), 3)
-      elseif f < 1 then
-        error("thread environments unsupported in Lua 5.2", 3) --[*]
-      end
-      f = debug.getinfo(f+2, 'f').func
-    elseif type(f) ~= 'function' then
-      error(("bad argument #1 to '%s' (number expected, got %s)")
-            :format(type(name, f)), 2)
-    end
-    return f
-  end
-  -- [*] might simulate with table keyed by coroutine.running()
-  
-  -- 5.1 style `setfenv` implemented in 5.2
-  function M.setfenv(f, t)
-    local f = envhelper(f, 'setfenv')
-    local up, val, unknown = envlookup(f)
-    if up then
-      debug.upvaluejoin(f, up, function() return up end, 1) --unique upval[*]
-      debug.setupvalue(f, up, t)
-    else
-      local what = debug.getinfo(f, 'S').what
-      if what ~= 'Lua' and what ~= 'main' then -- not Lua func
-        error("'setfenv' cannot change environment of given object", 2)
-      end -- else ignore no _ENV upvalue (warning: incompatible with 5.1)
-    end
-    return f  -- invariant: original f ~= 0
-  end
-  -- [*] http://lua-users.org/lists/lua-l/2010-06/msg00313.html
-
-  -- 5.1 style `getfenv` implemented in 5.2
-  function M.getfenv(f)
-    if f == 0 or f == nil then return _G end -- simulated behavior
-    local f = envhelper(f, 'setfenv')
-    local up, val = envlookup(f)
-    if not up then return _G end -- simulated behavior [**]
-    return val
-  end
-  -- [**] possible reasons: no _ENV upvalue, C function
-end
-
-
-return M
-\]===\]):gsub('\\([%]%[]===)\\([%]%[])','%1%2')
-assert(not sources["bit.numberlua"])sources["bit.numberlua"]=(\[===\[-- <pack bit.numberlua> --
---[[
-
-LUA MODULE
-
-  bit.numberlua - Bitwise operations implemented in pure Lua as numbers,
-    with Lua 5.2 'bit32' and (LuaJIT) LuaBitOp 'bit' compatibility interfaces.
-
-SYNOPSIS
-
-  local bit = require 'bit.numberlua'
-  print(bit.band(0xff00ff00, 0x00ff00ff)) --> 0xffffffff
-  
-  -- Interface providing strong Lua 5.2 'bit32' compatibility
-  local bit32 = require 'bit.numberlua'.bit32
-  assert(bit32.band(-1) == 0xffffffff)
-  
-  -- Interface providing strong (LuaJIT) LuaBitOp 'bit' compatibility
-  local bit = require 'bit.numberlua'.bit
-  assert(bit.tobit(0xffffffff) == -1)
-  
-DESCRIPTION
-  
-  This library implements bitwise operations entirely in Lua.
-  This module is typically intended if for some reasons you don't want
-  to or cannot  install a popular C based bit library like BitOp 'bit' [1]
-  (which comes pre-installed with LuaJIT) or 'bit32' (which comes
-  pre-installed with Lua 5.2) but want a similar interface.
-  
-  This modules represents bit arrays as non-negative Lua numbers. [1]
-  It can represent 32-bit bit arrays when Lua is compiled
-  with lua_Number as double-precision IEEE 754 floating point.
-
-  The module is nearly the most efficient it can be but may be a few times
-  slower than the C based bit libraries and is orders or magnitude
-  slower than LuaJIT bit operations, which compile to native code.  Therefore,
-  this library is inferior in performane to the other modules.
-
-  The `xor` function in this module is based partly on Roberto Ierusalimschy's
-  post in http://lua-users.org/lists/lua-l/2002-09/msg00134.html .
-  
-  The included BIT.bit32 and BIT.bit sublibraries aims to provide 100%
-  compatibility with the Lua 5.2 "bit32" and (LuaJIT) LuaBitOp "bit" library.
-  This compatbility is at the cost of some efficiency since inputted
-  numbers are normalized and more general forms (e.g. multi-argument
-  bitwise operators) are supported.
-  
-STATUS
-
-  WARNING: Not all corner cases have been tested and documented.
-  Some attempt was made to make these similar to the Lua 5.2 [2]
-  and LuaJit BitOp [3] libraries, but this is not fully tested and there
-  are currently some differences.  Addressing these differences may
-  be improved in the future but it is not yet fully determined how to
-  resolve these differences.
-  
-  The BIT.bit32 library passes the Lua 5.2 test suite (bitwise.lua)
-  http://www.lua.org/tests/5.2/ .  The BIT.bit library passes the LuaBitOp
-  test suite (bittest.lua).  However, these have not been tested on
-  platforms with Lua compiled with 32-bit integer numbers.
-
-API
-
-  BIT.tobit(x) --> z
-  
-    Similar to function in BitOp.
-    
-  BIT.tohex(x, n)
-  
-    Similar to function in BitOp.
-  
-  BIT.band(x, y) --> z
-  
-    Similar to function in Lua 5.2 and BitOp but requires two arguments.
-  
-  BIT.bor(x, y) --> z
-  
-    Similar to function in Lua 5.2 and BitOp but requires two arguments.
-
-  BIT.bxor(x, y) --> z
-  
-    Similar to function in Lua 5.2 and BitOp but requires two arguments.
-  
-  BIT.bnot(x) --> z
-  
-    Similar to function in Lua 5.2 and BitOp.
-
-  BIT.lshift(x, disp) --> z
-  
-    Similar to function in Lua 5.2 (warning: BitOp uses unsigned lower 5 bits of shift),
-  
-  BIT.rshift(x, disp) --> z
-  
-    Similar to function in Lua 5.2 (warning: BitOp uses unsigned lower 5 bits of shift),
-
-  BIT.extract(x, field [, width]) --> z
-  
-    Similar to function in Lua 5.2.
-  
-  BIT.replace(x, v, field, width) --> z
-  
-    Similar to function in Lua 5.2.
-  
-  BIT.bswap(x) --> z
-  
-    Similar to function in Lua 5.2.
-
-  BIT.rrotate(x, disp) --> z
-  BIT.ror(x, disp) --> z
-  
-    Similar to function in Lua 5.2 and BitOp.
-
-  BIT.lrotate(x, disp) --> z
-  BIT.rol(x, disp) --> z
-
-    Similar to function in Lua 5.2 and BitOp.
-  
-  BIT.arshift
-  
-    Similar to function in Lua 5.2 and BitOp.
-    
-  BIT.btest
-  
-    Similar to function in Lua 5.2 with requires two arguments.
-
-  BIT.bit32
-  
-    This table contains functions that aim to provide 100% compatibility
-    with the Lua 5.2 "bit32" library.
-    
-    bit32.arshift (x, disp) --> z
-    bit32.band (...) --> z
-    bit32.bnot (x) --> z
-    bit32.bor (...) --> z
-    bit32.btest (...) --> true | false
-    bit32.bxor (...) --> z
-    bit32.extract (x, field [, width]) --> z
-    bit32.replace (x, v, field [, width]) --> z
-    bit32.lrotate (x, disp) --> z
-    bit32.lshift (x, disp) --> z
-    bit32.rrotate (x, disp) --> z
-    bit32.rshift (x, disp) --> z
-
-  BIT.bit
-  
-    This table contains functions that aim to provide 100% compatibility
-    with the LuaBitOp "bit" library (from LuaJIT).
-    
-    bit.tobit(x) --> y
-    bit.tohex(x [,n]) --> y
-    bit.bnot(x) --> y
-    bit.bor(x1 [,x2...]) --> y
-    bit.band(x1 [,x2...]) --> y
-    bit.bxor(x1 [,x2...]) --> y
-    bit.lshift(x, n) --> y
-    bit.rshift(x, n) --> y
-    bit.arshift(x, n) --> y
-    bit.rol(x, n) --> y
-    bit.ror(x, n) --> y
-    bit.bswap(x) --> y
-    
-DEPENDENCIES
-
-  None (other than Lua 5.1 or 5.2).
-    
-DOWNLOAD/INSTALLATION
-
-  If using LuaRocks:
-    luarocks install lua-bit-numberlua
-
-  Otherwise, download <https://github.com/davidm/lua-bit-numberlua/zipball/master>.
-  Alternately, if using git:
-    git clone git://github.com/davidm/lua-bit-numberlua.git
-    cd lua-bit-numberlua
-  Optionally unpack:
-    ./util.mk
-  or unpack and install in LuaRocks:
-    ./util.mk install 
-
-REFERENCES
-
-  [1] http://lua-users.org/wiki/FloatingPoint
-  [2] http://www.lua.org/manual/5.2/
-  [3] http://bitop.luajit.org/
-  
-LICENSE
-
-  (c) 2008-2011 David Manura.  Licensed under the same terms as Lua (MIT).
-
-  Permission is hereby granted, free of charge, to any person obtaining a copy
-  of this software and associated documentation files (the "Software"), to deal
-  in the Software without restriction, including without limitation the rights
-  to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
-  copies of the Software, and to permit persons to whom the Software is
-  furnished to do so, subject to the following conditions:
-
-  The above copyright notice and this permission notice shall be included in
-  all copies or substantial portions of the Software.
-
-  THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-  IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-  FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.  IN NO EVENT SHALL THE
-  AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
-  LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
-  OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
-  THE SOFTWARE.
-  (end license)
-
---]]
-
-local M = {_TYPE='module', _NAME='bit.numberlua', _VERSION='0.3.1.20120131'}
-
-local floor = math.floor
-
-local MOD = 2^32
-local MODM = MOD-1
-
-local function memoize(f)
-  local mt = {}
-  local t = setmetatable({}, mt)
-  function mt:__index(k)
-    local v = f(k); t[k] = v
-    return v
-  end
-  return t
-end
-
-local function make_bitop_uncached(t, m)
-  local function bitop(a, b)
-    local res,p = 0,1
-    while a ~= 0 and b ~= 0 do
-      local am, bm = a%m, b%m
-      res = res + t[am][bm]*p
-      a = (a - am) / m
-      b = (b - bm) / m
-      p = p*m
-    end
-    res = res + (a+b)*p
-    return res
-  end
-  return bitop
-end
-
-local function make_bitop(t)
-  local op1 = make_bitop_uncached(t,2^1)
-  local op2 = memoize(function(a)
-    return memoize(function(b)
-      return op1(a, b)
-    end)
-  end)
-  return make_bitop_uncached(op2, 2^(t.n or 1))
-end
-
--- ok?  probably not if running on a 32-bit int Lua number type platform
-function M.tobit(x)
-  return x % 2^32
-end
-
-M.bxor = make_bitop {[0]={[0]=0,[1]=1},[1]={[0]=1,[1]=0}, n=4}
-local bxor = M.bxor
-
-function M.bnot(a)   return MODM - a end
-local bnot = M.bnot
-
-function M.band(a,b) return ((a+b) - bxor(a,b))/2 end
-local band = M.band
-
-function M.bor(a,b)  return MODM - band(MODM - a, MODM - b) end
-local bor = M.bor
-
-local lshift, rshift -- forward declare
-
-function M.rshift(a,disp) -- Lua5.2 insipred
-  if disp < 0 then return lshift(a,-disp) end
-  return floor(a % 2^32 / 2^disp)
-end
-rshift = M.rshift
-
-function M.lshift(a,disp) -- Lua5.2 inspired
-  if disp < 0 then return rshift(a,-disp) end 
-  return (a * 2^disp) % 2^32
-end
-lshift = M.lshift
-
-function M.tohex(x, n) -- BitOp style
-  n = n or 8
-  local up
-  if n <= 0 then
-    if n == 0 then return '' end
-    up = true
-    n = - n
-  end
-  x = band(x, 16^n-1)
-  return ('%0'..n..(up and 'X' or 'x')):format(x)
-end
-local tohex = M.tohex
-
-function M.extract(n, field, width) -- Lua5.2 inspired
-  width = width or 1
-  return band(rshift(n, field), 2^width-1)
-end
-local extract = M.extract
-
-function M.replace(n, v, field, width) -- Lua5.2 inspired
-  width = width or 1
-  local mask1 = 2^width-1
-  v = band(v, mask1) -- required by spec?
-  local mask = bnot(lshift(mask1, field))
-  return band(n, mask) + lshift(v, field)
-end
-local replace = M.replace
-
-function M.bswap(x)  -- BitOp style
-  local a = band(x, 0xff); x = rshift(x, 8)
-  local b = band(x, 0xff); x = rshift(x, 8)
-  local c = band(x, 0xff); x = rshift(x, 8)
-  local d = band(x, 0xff)
-  return lshift(lshift(lshift(a, 8) + b, 8) + c, 8) + d
-end
-local bswap = M.bswap
-
-function M.rrotate(x, disp)  -- Lua5.2 inspired
-  disp = disp % 32
-  local low = band(x, 2^disp-1)
-  return rshift(x, disp) + lshift(low, 32-disp)
-end
-local rrotate = M.rrotate
-
-function M.lrotate(x, disp)  -- Lua5.2 inspired
-  return rrotate(x, -disp)
-end
-local lrotate = M.lrotate
-
-M.rol = M.lrotate  -- LuaOp inspired
-M.ror = M.rrotate  -- LuaOp insipred
-
-
-function M.arshift(x, disp) -- Lua5.2 inspired
-  local z = rshift(x, disp)
-  if x >= 0x80000000 then z = z + lshift(2^disp-1, 32-disp) end
-  return z
-end
-local arshift = M.arshift
-
-function M.btest(x, y) -- Lua5.2 inspired
-  return band(x, y) ~= 0
-end
-
---
--- Start Lua 5.2 "bit32" compat section.
---
-
-M.bit32 = {} -- Lua 5.2 'bit32' compatibility
-
-
-local function bit32_bnot(x)
-  return (-1 - x) % MOD
-end
-M.bit32.bnot = bit32_bnot
-
-local function bit32_bxor(a, b, c, ...)
-  local z
-  if b then
-    a = a % MOD
-    b = b % MOD
-    z = bxor(a, b)
-    if c then
-      z = bit32_bxor(z, c, ...)
-    end
-    return z
-  elseif a then
-    return a % MOD
-  else
-    return 0
-  end
-end
-M.bit32.bxor = bit32_bxor
-
-local function bit32_band(a, b, c, ...)
-  local z
-  if b then
-    a = a % MOD
-    b = b % MOD
-    z = ((a+b) - bxor(a,b)) / 2
-    if c then
-      z = bit32_band(z, c, ...)
-    end
-    return z
-  elseif a then
-    return a % MOD
-  else
-    return MODM
-  end
-end
-M.bit32.band = bit32_band
-
-local function bit32_bor(a, b, c, ...)
-  local z
-  if b then
-    a = a % MOD
-    b = b % MOD
-    z = MODM - band(MODM - a, MODM - b)
-    if c then
-      z = bit32_bor(z, c, ...)
-    end
-    return z
-  elseif a then
-    return a % MOD
-  else
-    return 0
-  end
-end
-M.bit32.bor = bit32_bor
-
-function M.bit32.btest(...)
-  return bit32_band(...) ~= 0
-end
-
-function M.bit32.lrotate(x, disp)
-  return lrotate(x % MOD, disp)
-end
-
-function M.bit32.rrotate(x, disp)
-  return rrotate(x % MOD, disp)
-end
-
-function M.bit32.lshift(x,disp)
-  if disp > 31 or disp < -31 then return 0 end
-  return lshift(x % MOD, disp)
-end
-
-function M.bit32.rshift(x,disp)
-  if disp > 31 or disp < -31 then return 0 end
-  return rshift(x % MOD, disp)
-end
-
-function M.bit32.arshift(x,disp)
-  x = x % MOD
-  if disp >= 0 then
-    if disp > 31 then
-      return (x >= 0x80000000) and MODM or 0
-    else
-      local z = rshift(x, disp)
-      if x >= 0x80000000 then z = z + lshift(2^disp-1, 32-disp) end
-      return z
-    end
-  else
-    return lshift(x, -disp)
-  end
-end
-
-function M.bit32.extract(x, field, ...)
-  local width = ... or 1
-  if field < 0 or field > 31 or width < 0 or field+width > 32 then error 'out of range' end
-  x = x % MOD
-  return extract(x, field, ...)
-end
-
-function M.bit32.replace(x, v, field, ...)
-  local width = ... or 1
-  if field < 0 or field > 31 or width < 0 or field+width > 32 then error 'out of range' end
-  x = x % MOD
-  v = v % MOD
-  return replace(x, v, field, ...)
-end
-
-
---
--- Start LuaBitOp "bit" compat section.
---
-
-M.bit = {} -- LuaBitOp "bit" compatibility
-
-function M.bit.tobit(x)
-  x = x % MOD
-  if x >= 0x80000000 then x = x - MOD end
-  return x
-end
-local bit_tobit = M.bit.tobit
-
-function M.bit.tohex(x, ...)
-  return tohex(x % MOD, ...)
-end
-
-function M.bit.bnot(x)
-  return bit_tobit(bnot(x % MOD))
-end
-
-local function bit_bor(a, b, c, ...)
-  if c then
-    return bit_bor(bit_bor(a, b), c, ...)
-  elseif b then
-    return bit_tobit(bor(a % MOD, b % MOD))
-  else
-    return bit_tobit(a)
-  end
-end
-M.bit.bor = bit_bor
-
-local function bit_band(a, b, c, ...)
-  if c then
-    return bit_band(bit_band(a, b), c, ...)
-  elseif b then
-    return bit_tobit(band(a % MOD, b % MOD))
-  else
-    return bit_tobit(a)
-  end
-end
-M.bit.band = bit_band
-
-local function bit_bxor(a, b, c, ...)
-  if c then
-    return bit_bxor(bit_bxor(a, b), c, ...)
-  elseif b then
-    return bit_tobit(bxor(a % MOD, b % MOD))
-  else
-    return bit_tobit(a)
-  end
-end
-M.bit.bxor = bit_bxor
-
-function M.bit.lshift(x, n)
-  return bit_tobit(lshift(x % MOD, n % 32))
-end
-
-function M.bit.rshift(x, n)
-  return bit_tobit(rshift(x % MOD, n % 32))
-end
-
-function M.bit.arshift(x, n)
-  return bit_tobit(arshift(x % MOD, n % 32))
-end
-
-function M.bit.rol(x, n)
-  return bit_tobit(lrotate(x % MOD, n % 32))
-end
-
-function M.bit.ror(x, n)
-  return bit_tobit(rrotate(x % MOD, n % 32))
-end
-
-function M.bit.bswap(x)
-  return bit_tobit(bswap(x % MOD))
-end
-
-return M
-\]===\]):gsub('\\([%]%[]===)\\([%]%[])','%1%2')
 local add
 if not pcall(function() add = require"aioruntime".add end) then
-        local loadstring=loadstring; local preload = require"package".preload
+        local loadstring=_G.loadstring or _G.load; local preload = require"package".preload
         add = function(name, rawcode)
 		if not preload[name] then
-		        preload[name] = function(...) return loadstring(rawcode)(...) end
+		        preload[name] = function(...) return assert(loadstring(rawcode), "loadstring: "..name.." failed")(...) end
 		else
 			print("WARNING: overwrite "..name)
 		end
@@ -3222,6 +2537,7 @@ if not pcall(function() add = require"aioruntime".add end) then
 end
 for name, rawcode in pairs(sources) do add(name, rawcode, priorities[name]) end
 end;
+local _M = {}
 
 local function merge(dest, source)
 	for k,v in pairs(source) do
@@ -3243,16 +2559,52 @@ local function populate_package(loaded, modnames)
 	for i,modname in ipairs(modnames) do
 		loaded[modname] = require("restricted."..modname)
 	end
-	return loaded
 end
 
-local function setup_g(g, _G, config)
+
+-- getmetatable - UNSAFE
+-- - Note that getmetatable"" returns the metatable of strings.
+--   Modification of the contents of that metatable can break code outside the sandbox that relies on this string behavior.
+--   Similar cases may exist unless objects are protected appropriately via __metatable. Ideally __metatable should be immutable.
+-- UNSAFE : http://lua-users.org/wiki/SandBoxes
+local function make_safe_getsetmetatable(unsafe_getmetatable, unsafe_setmetatable)
+	local safe_getmetatable, safe_setmetatable
+	do
+		local mt_string = unsafe_getmetatable("")
+		safe_getmetatable = function(t)
+			local mt = unsafe_getmetatable(t)
+			if mt_string == mt then
+				return false
+			end
+			return mt
+		end
+		safe_setmetatable = function(t, mt)
+			if mt_string == t or mt_string == mt then
+				return t
+			end
+			return unsafe_setmetatable(t, mt)
+		end
+	end
+	return safe_getmetatable, safe_setmetatable
+end
+
+local function setup_g(g, master, config)
 	assert(type(g)=="table")
-	assert(type(_G)=="table")
+	assert(type(master)=="table")
 	assert(type(config)=="table")
-	assert(type(config.g_content)=="table")
-	local g = merge(g, keysfrom(_G, config.g_content))
-	g._G = g -- self
+
+	for i,k in ipairs{
+		"_VERSION", "assert", "error", "ipairs", "next", "pairs",
+		"pcall", "select", "tonumber", "tostring", "type", "unpack","xpcall",
+	} do
+		g[k]=master[k]
+	end
+
+	local safe_getmetatable, safe_setmetatable = make_safe_getsetmetatable(master.getmetatable,master.setmetatable)
+	g.getmetatable = assert(safe_getmetatable)
+	g.setmetatable = assert(safe_setmetatable)
+	g.print = function() end
+	g["_G"] = g -- self
 end
 local function setup_package(package, config)
 	package.config	= require"package".config or "/\n;\n?\n!\n-\n"
@@ -3263,8 +2615,8 @@ local function setup_package(package, config)
 end
 local function cross_setup_g_package(g, package, config)
 	local loaded = package.loaded
-	loaded._G	= g		-- add _G as loaded modules
-	
+	loaded["_G"]	= g		-- add _G as loaded modules
+
 	-- global register all modules
 	--for k,v in pairs(loaded) do g[k] = v end
 	--g.debug = nil -- except debug
@@ -3274,17 +2626,21 @@ local function cross_setup_g_package(g, package, config)
 	elseif config.package == "all" then
 		populate_package(loaded, config.package_wanted)
 	end
-	g.table		= loaded.table	-- _G.table
-	g.string	= loaded.string	-- _G.string
-
+	for i,k in ipairs(config.g_content) do
+		if loaded[k] then
+			g[k] = loaded[k]
+		end
+	end
 end
 
 
-local function new_env(_G, conf)
-	assert(_G)
+local function new_env(master, conf)
+	assert(master) -- the real _G
 	local config = {}
 	for k,v in pairs(_M.defaultconfig) do config[k]=v end
-	for k,v in pairs(conf) do config[k]=v end
+	if type(conf) == "table" then
+		for k,v in pairs(conf) do config[k]=v end
+	end
 	assert( config.package )
 	assert( config.package_wanted )
 	assert( config.g_content )
@@ -3293,10 +2649,9 @@ local function new_env(_G, conf)
 
 	local req, package = require("newpackage").new()
 	assert(req("package") == package)
-	local preload, loaded, searchers = package.preload, package.loaded, package.searchers
-	assert(loaded.package == package)
+	assert(package.loaded.package == package)
 
-	setup_g(g, _G, config)
+	setup_g(g, master, config)
 	setup_package(package, config)
 	cross_setup_g_package(g, package, config)
 
@@ -3305,19 +2660,66 @@ local function new_env(_G, conf)
 	return g
 end
 
-local function run(f, env)
-	local ce = require("compat_env")
-	return ce.load(f, nil, nil, newenv)
+local ce_load = require("compat_env").load
+--local function run(f, env)
+--	return ce_load(f, nil, nil, env)
+--end
+
+local funcs = {
+	dostring = function(self, str, ...)
+		return pcall(function(...) return ce_load(str, str, 't', self.env)(...) end, ...)
+	end,
+	run = function(self, str, ...)
+		local function filter(ok, ...)
+			self.lastok = ok
+			if not ok then
+				self.lasterr = ...
+				return nil
+			end
+			self.lasterr = nil
+			return ...
+		end
+		if type(str) == "function" then
+			print("STR = function here", #{...}, ...)
+			return require"compat_env".setfenv(f, self.env)(...)
+			--return filter(pcall(function(...)
+			--	return assert(ce_load(string.dump(str), nil, 'b', self.env))(...)
+			--end))
+		end
+		return filter( pcall( function(...)
+			return assert(ce_load(str, str, 't', self.env))(...)
+		end) )
+	end,
+	dofunction = function(self, func, ...)
+		assert( type(func) == "function")
+		return pcall(function(...) return func(...) end, ...)
+	end,
+	runf = function(self, func, ...)
+		assert( type(func) == "function")
+		local ok, t_ret = pcall(function(...) return {func(...)} end, ...)
+		if ok then
+			return t_ret
+		else
+			return nil
+		end
+	end,
+}
+local new_mt = { __index = funcs, }
+
+local function new(master, conf)
+	local e = new_env(master or _G, conf)
+	local o = setmetatable( {env = e}, new_mt)
+	assert(o.env)
+	return o
 end
 
 local defaultconfig = require "isolation.defaults".defaultconfig
 
-local _M = {
-	new = new_env,
-	--new_package = function(...) return require"newpackage".new(...) end,
-	run = run,
-	defaultconfig = defaultconfig,
-}
+--_M.new_env = new_env
+_M.new = new
+_M.run = run
+_M.defaultconfig = defaultconfig
+
 return _M
 ]===]):gsub('\\([%]%[]===)\\([%]%[])','%1%2')
 assert(not sources["lulpeg"])sources["lulpeg"]=([===[-- <pack lulpeg> --
@@ -7979,6 +7381,1608 @@ return LL
 --                  acknowledge that I will not be held liable
 --                  for any damage its use could incur.
 ]===]):gsub('\\([%]%[]===)\\([%]%[])','%1%2')
+assert(not sources["cwtest"])sources["cwtest"]=([===[-- <pack cwtest> --
+local has_strict = pcall(require, "pl.strict")
+local has_pretty, pretty = pcall(require, "pl.pretty")
+if not has_strict then
+  print("WARNING: pl.strict not found, strictness not enforced.")
+end
+if not has_pretty then
+  pretty = nil
+  print("WARNING: pl.pretty not found, using alternate formatter.")
+end
+
+--- logic borrowed to Penlight
+
+local deepcompare
+deepcompare = function(t1, t2)
+  local ty1 = type(t1)
+  local ty2 = type(t2)
+  if ty1 ~= ty2 then return false end
+  -- non-table types can be directly compared
+  if ty1 ~= "table" then return t1 == t2 end
+  -- as well as tables which have the metamethod __eq
+  local mt = getmetatable(t1)
+  if mt and mt.__eq then return t1 == t2 end
+  for k1 in pairs(t1) do
+    if t2[k1] == nil then return false end
+  end
+  for k2 in pairs(t2) do
+    if t1[k2] == nil then return false end
+  end
+  for k1,v1 in pairs(t1) do
+    local v2 = t2[k1]
+    if not deepcompare(v1, v2) then return false end
+  end
+  return true
+end
+
+local compare_no_order = function(t1, t2, cmp)
+  cmp = cmp or deepcompare
+  -- non-table types are considered *never* equal here
+  if (type(t1) ~= "table") or (type(t2) ~= "table") then return false end
+  if #t1 ~= #t2 then return false end
+  local visited = {}
+  for i = 1,#t1 do
+    local val = t1[i]
+    local gotcha
+    for j = 1,#t2 do if not visited[j] then
+      if cmp(val, t2[j]) then
+        gotcha = j
+        break
+      end
+    end end
+    if not gotcha then return false end
+    visited[gotcha] = true
+  end
+  return true
+end
+
+--- basic pretty.write fallback
+
+local less_pretty_write
+less_pretty_write = function(t)
+  local quote = function(s)
+    if type(s) == "string" then
+      return string.format("%q", tostring(s))
+    else return tostring(s) end
+  end
+  if type(t) == "table" then
+    local r = {"{"}
+    for k,v in pairs(t) do
+      if type(k) ~= "number" then k = quote(k) end
+      r[#r+1] = "["
+      r[#r+1] = k
+      r[#r+1] = "]="
+      r[#r+1] = less_pretty_write(v)
+      r[#r+1] = ","
+    end
+    r[#r+1] = "}"
+    return table.concat(r)
+  else return quote(t) end
+end
+
+--- end of Penlight fallbacks
+
+local pretty_write
+if pretty then
+  pretty_write = function(x) return pretty.write(x, "") end
+else
+  pretty_write = less_pretty_write
+end
+
+local printf = function(p, ...)
+  io.stdout:write(string.format(p, ...)); io.stdout:flush()
+end
+
+local eprintf = function(p, ...)
+  io.stderr:write(string.format(p, ...))
+end
+
+local log_success = function(self, tpl, ...)
+  assert(type(tpl) == "string")
+  local s = (select('#', ...) == 0) and tpl or string.format(tpl, ...)
+  self.successes[#self.successes+1] = s
+  if self.verbosity == 2 then
+    self.printf("\n%s\n", s)
+  else
+    self.printf(".")
+  end
+  return true
+end
+
+local log_failure = function(self, tpl, ...)
+  assert(type(tpl) == "string")
+  local s = (select('#', ...) == 0) and tpl or string.format(tpl, ...)
+  self.failures[#self.failures+1] = s
+  if self.verbosity > 0 then
+    self.eprintf("\n%s\n", s)
+  else
+    self.printf("x")
+  end
+  return true
+end
+
+local pass_tpl = function(self, tpl, ...)
+  assert(type(tpl) == "string")
+  local info = debug.getinfo(3)
+  self:log_success(
+    "[OK] %s line %d%s",
+    info.short_src,
+    info.currentline,
+    (select('#', ...) == 0) and tpl or string.format(tpl, ...)
+  )
+  return true
+end
+
+local fail_tpl = function(self, tpl, ...)
+  assert(type(tpl) == "string")
+  local info = debug.getinfo(3)
+  self:log_failure(
+    "[KO] %s line %d%s",
+    info.short_src,
+    info.currentline,
+    (select('#', ...) == 0) and tpl or string.format(tpl, ...)
+  )
+  return false
+end
+
+local pass_assertion = function(self)
+  local info = debug.getinfo(3)
+  self:log_success(
+    "[OK] %s line %d (assertion)",
+    info.short_src,
+    info.currentline
+  )
+  return true
+end
+
+local fail_assertion = function(self)
+  local info = debug.getinfo(3)
+  self:log_failure(
+    "[KO] %s line %d (assertion)",
+    info.short_src,
+    info.currentline
+  )
+  return false
+end
+
+local pass_eq = function(self, x, y)
+  local info = debug.getinfo(3)
+  self:log_success(
+    "[OK] %s line %d\n  expected: %s\n       got: %s",
+    info.short_src,
+    info.currentline,
+    pretty_write(y),
+    pretty_write(x)
+  )
+  return true
+end
+
+local fail_eq = function(self, x, y)
+  local info = debug.getinfo(3)
+  self:log_failure(
+    "[KO] %s line %d\n  expected: %s\n       got: %s",
+    info.short_src,
+    info.currentline,
+    pretty_write(y),
+    pretty_write(x)
+  )
+  return false
+end
+
+local start = function(self, s)
+  assert((not (self.failures or self.successes)), "test already started")
+  self.failures, self.successes = {}, {}
+  if self.verbosity > 0 then
+    self.printf("\n=== %s ===\n", s)
+  else
+    self.printf("%s ", s)
+  end
+end
+
+local done = function(self)
+  local f, s = self.failures, self.successes
+  assert((f and s), "call start before done")
+  local failed = (#f > 0)
+  if failed then
+    if self.verbosity > 0 then
+      self.printf("\n=== FAILED ===\n")
+    else
+      self.printf(" FAILED\n")
+      for i=1,#f do self.eprintf("\n%s\n", f[i]) end
+      self.printf("\n")
+    end
+  else
+    if self.verbosity > 0 then
+      self.printf("\n=== OK ===\n")
+    else
+      self.printf(" OK\n")
+    end
+  end
+  self.failures, self.successes = nil, nil
+  if failed then self.tainted = true end
+  return (not failed)
+end
+
+local eq = function(self, x, y)
+  local ok = (x == y) or deepcompare(x, y)
+  local r = (ok and pass_eq or fail_eq)(self, x, y)
+  return r
+end
+
+local neq = function(self, x, y)
+  local sx, sy = pretty_write(x), pretty_write(y)
+  local r
+  if deepcompare(x, y) then
+    r = fail_tpl(self, " (%s == %s)", sx, sy)
+  else
+    r = pass_tpl(self, " (%s != %s)", sx, sy)
+  end
+  return r
+end
+
+local seq = function(self, x, y) -- list-sets
+  local ok = compare_no_order(x, y)
+  local r = (ok and pass_eq or fail_eq)(self, x, y)
+  return r
+end
+
+local _assert_fun = function(x, ...)
+  if (select('#', ...) == 0) then
+    return (x and pass_assertion or fail_assertion)
+  else
+    return (x and pass_tpl or fail_tpl)
+  end
+end
+
+local is_true = function(self, x, ...)
+  local r = _assert_fun(x, ...)(self, ...)
+  return r
+end
+
+local is_false = function(self, x, ...)
+  local r = _assert_fun((not x), ...)(self, ...)
+  return r
+end
+
+local err = function(self, f, e)
+  local r = { pcall(f) }
+  if e then
+    if type(e) == "string" then
+      if r[1] then
+        table.remove(r, 1)
+        r = fail_tpl(
+          self,
+          "\n  expected error: %s\n             got: %s",
+          e, pretty_write(r, "")
+        )
+      elseif r[2] ~= e then
+        r = fail_tpl(
+          self,
+          "\n  expected error: %s\n       got error: %s",
+          e, r[2]
+        )
+      else
+        r = pass_tpl(self, ": error [[%s]] caught", e)
+      end
+    elseif type(e) == "table" and type(e.matching) == "string" then
+      local pattern = e.matching
+      if r[1] then
+        table.remove(r, 1)
+        r = fail_tpl(
+          self,
+          "\n  expected error, got: %s",
+          e, pretty_write(r, "")
+        )
+      elseif not r[2]:match(pattern) then
+        r = fail_tpl(
+          self,
+          "\n  expected error matching: %q\n       got error: %s",
+          pattern, r[2]
+        )
+      else
+        r = pass_tpl(self, ": error [[%s]] caught", e)
+      end
+    end
+  else
+    if r[1] then
+      table.remove(r, 1)
+      r = fail_tpl(
+        self,
+        ": expected error, got %s",
+        pretty_write(r, "")
+      )
+    else
+      r = pass_tpl(self, ": error caught")
+    end
+  end
+  return r
+end
+
+local exit = function(self)
+  os.exit(self.tainted and 1 or 0)
+end
+
+local methods = {
+  start = start,
+  done = done,
+  eq = eq,
+  neq = neq,
+  seq = seq,
+  yes = is_true,
+  no = is_false,
+  err = err,
+  exit = exit,
+  -- below: only to build custom tests
+  log_success = log_success,
+  log_failure = log_failure,
+  pass_eq = pass_eq,
+  fail_eq = fail_eq,
+  pass_assertion = pass_assertion,
+  fail_assertion = fail_assertion,
+  pass_tpl = pass_tpl,
+  fail_tpl = fail_tpl,
+}
+
+local new = function(verbosity)
+  if not verbosity then
+    verbosity = 0
+  elseif type(verbosity) ~= "number" then
+    verbosity = 1
+  end
+  assert(
+    (math.floor(verbosity) == verbosity) and
+    (verbosity >= 0) and (verbosity < 3)
+  )
+  local r = {
+    verbosity = verbosity,
+    printf = printf,
+    eprintf = eprintf,
+    tainted = false,
+  }
+  return setmetatable(r, {__index = methods})
+end
+
+return {
+  new = new,
+  pretty_write = pretty_write,
+  deepcompare = deepcompare,
+  compare_no_order = compare_no_order,
+}
+]===]):gsub('\\([%]%[]===)\\([%]%[])','%1%2')
+assert(not sources["pl.pretty"])sources["pl.pretty"]=([===[-- <pack pl.pretty> --
+--- Pretty-printing Lua tables.
+-- Also provides a sandboxed Lua table reader and
+-- a function to present large numbers in human-friendly format.
+--
+-- Dependencies: `pl.utils`, `pl.lexer`
+-- @module pl.pretty
+
+local append = table.insert
+local concat = table.concat
+local utils = require 'pl.utils'
+local lexer = require 'pl.lexer'
+local assert_arg = utils.assert_arg
+
+local pretty = {}
+
+local function save_string_index ()
+    local SMT = getmetatable ''
+    if SMT then
+        SMT.old__index = SMT.__index
+        SMT.__index = nil
+    end
+    return SMT
+end
+
+local function restore_string_index (SMT)
+    if SMT then
+        SMT.__index = SMT.old__index
+    end
+end
+
+--- read a string representation of a Lua table.
+-- Uses load(), but tries to be cautious about loading arbitrary code!
+-- It is expecting a string of the form '{...}', with perhaps some whitespace
+-- before or after the curly braces. A comment may occur beforehand.
+-- An empty environment is used, and
+-- any occurance of the keyword 'function' will be considered a problem.
+-- in the given environment - the return value may be `nil`.
+-- @param s {string} string of the form '{...}', with perhaps some whitespace
+-- before or after the curly braces.
+-- @return a table
+function pretty.read(s)
+    assert_arg(1,s,'string')
+    if s:find '^%s*%-%-' then -- may start with a comment..
+        s = s:gsub('%-%-.-\n','')
+    end
+    if not s:find '^%s*%b{}%s*$' then return nil,"not a Lua table" end
+    if s:find '[^\'"%w_]function[^\'"%w_]' then
+        local tok = lexer.lua(s)
+        for t,v in tok do
+            if t == 'keyword' then
+                return nil,"cannot have functions in table definition"
+            end
+        end
+    end
+    s = 'return '..s
+    local chunk,err = utils.load(s,'tbl','t',{})
+    if not chunk then return nil,err end
+    local SMT = save_string_index()
+    local ok,ret = pcall(chunk)
+    restore_string_index(SMT)
+    if ok then return ret
+    else
+        return nil,ret
+    end
+end
+
+--- read a Lua chunk.
+-- @param s Lua code
+-- @param env optional environment
+-- @param paranoid prevent any looping constructs and disable string methods
+-- @return the environment
+function pretty.load (s, env, paranoid)
+    env = env or {}
+    if paranoid then
+        local tok = lexer.lua(s)
+        for t,v in tok do
+            if t == 'keyword'
+                and (v == 'for' or v == 'repeat' or v == 'function' or v == 'goto')
+            then
+                return nil,"looping not allowed"
+            end
+        end
+    end
+    local chunk,err = utils.load(s,'tbl','t',env)
+    if not chunk then return nil,err end
+    local SMT = paranoid and save_string_index()
+    local ok,err = pcall(chunk)
+    restore_string_index(SMT)
+    if not ok then return nil,err end
+    return env
+end
+
+local function quote_if_necessary (v)
+    if not v then return ''
+    else
+        if v:find ' ' then v = '"'..v..'"' end
+    end
+    return v
+end
+
+local keywords
+
+local function is_identifier (s)
+    return type(s) == 'string' and s:find('^[%a_][%w_]*$') and not keywords[s]
+end
+
+local function quote (s)
+    if type(s) == 'table' then
+        return pretty.write(s,'')
+    else
+        return ('%q'):format(tostring(s))
+    end
+end
+
+local function index (numkey,key)
+    if not numkey then key = quote(key) end
+    return '['..key..']'
+end
+
+
+---	Create a string representation of a Lua table.
+--  This function never fails, but may complain by returning an
+--  extra value. Normally puts out one item per line, using
+--  the provided indent; set the second parameter to '' if
+--  you want output on one line.
+--	@param tbl {table} Table to serialize to a string.
+--	@param space {string} (optional) The indent to use.
+--	Defaults to two spaces; make it the empty string for no indentation
+--	@param not_clever {bool} (optional) Use for plain output, e.g {['key']=1}.
+--	Defaults to false.
+--  @return a string
+--  @return a possible error message
+function pretty.write (tbl,space,not_clever)
+    if type(tbl) ~= 'table' then
+        local res = tostring(tbl)
+        if type(tbl) == 'string' then return quote(tbl) end
+        return res, 'not a table'
+    end
+    if not keywords then
+        keywords = lexer.get_keywords()
+    end
+    local set = ' = '
+    if space == '' then set = '=' end
+    space = space or '  '
+    local lines = {}
+    local line = ''
+    local tables = {}
+
+
+    local function put(s)
+        if #s > 0 then
+            line = line..s
+        end
+    end
+
+    local function putln (s)
+        if #line > 0 then
+            line = line..s
+            append(lines,line)
+            line = ''
+        else
+            append(lines,s)
+        end
+    end
+
+    local function eat_last_comma ()
+        local n,lastch = #lines
+        local lastch = lines[n]:sub(-1,-1)
+        if lastch == ',' then
+            lines[n] = lines[n]:sub(1,-2)
+        end
+    end
+
+
+    local writeit
+    writeit = function (t,oldindent,indent)
+        local tp = type(t)
+        if tp ~= 'string' and  tp ~= 'table' then
+            putln(quote_if_necessary(tostring(t))..',')
+        elseif tp == 'string' then
+            if t:find('\n') then
+                putln('[[\n'..t..']],')
+            else
+                putln(quote(t)..',')
+            end
+        elseif tp == 'table' then
+            if tables[t] then
+                putln('<cycle>,')
+                return
+            end
+            tables[t] = true
+            local newindent = indent..space
+            putln('{')
+            local used = {}
+            if not not_clever then
+                for i,val in ipairs(t) do
+                    put(indent)
+                    writeit(val,indent,newindent)
+                    used[i] = true
+                end
+            end
+            for key,val in pairs(t) do
+                local numkey = type(key) == 'number'
+                if not_clever then
+                    key = tostring(key)
+                    put(indent..index(numkey,key)..set)
+                    writeit(val,indent,newindent)
+                else
+                    if not numkey or not used[key] then -- non-array indices
+                        if numkey or not is_identifier(key) then
+                            key = index(numkey,key)
+                        end
+                        put(indent..key..set)
+                        writeit(val,indent,newindent)
+                    end
+                end
+            end
+            tables[t] = nil
+            eat_last_comma()
+            putln(oldindent..'},')
+        else
+            putln(tostring(t)..',')
+        end
+    end
+    writeit(tbl,'',space)
+    eat_last_comma()
+    return concat(lines,#space > 0 and '\n' or '')
+end
+
+---	Dump a Lua table out to a file or stdout.
+--	@param t {table} The table to write to a file or stdout.
+--	@param ... {string} (optional) File name to write too. Defaults to writing
+--	to stdout.
+function pretty.dump (t,...)
+    if select('#',...)==0 then
+        print(pretty.write(t))
+        return true
+    else
+        return utils.writefile(...,pretty.write(t))
+    end
+end
+
+local memp,nump = {'B','KiB','MiB','GiB'},{'','K','M','B'}
+
+local comma
+function comma (val)
+    local thou = math.floor(val/1000)
+    if thou > 0 then return comma(thou)..','..(val % 1000)
+    else return tostring(val) end
+end
+
+--- format large numbers nicely for human consumption.
+-- @param num a number
+-- @param kind one of 'M' (memory in KiB etc), 'N' (postfixes are 'K','M' and 'B')
+-- and 'T' (use commas as thousands separator)
+-- @param prec number of digits to use for 'M' and 'N' (default 1)
+function pretty.number (num,kind,prec)
+    local fmt = '%.'..(prec or 1)..'f%s'
+    if kind == 'T' then
+        return comma(num)
+    else
+        local postfixes, fact
+        if kind == 'M' then
+            fact = 1024
+            postfixes = memp
+        else
+            fact = 1000
+            postfixes = nump
+        end
+        local div = fact
+        local k = 1
+        while num >= div and k <= #postfixes do
+            div = div * fact
+            k = k + 1
+        end
+        div = div / fact
+        if k > #postfixes then k = k - 1; div = div/fact end
+        if k > 1 then
+            return fmt:format(num/div,postfixes[k] or 'duh')
+        else
+            return num..postfixes[1]
+        end
+    end
+end
+
+return pretty
+]===]):gsub('\\([%]%[]===)\\([%]%[])','%1%2')
+assert(not sources["pl.utils"])sources["pl.utils"]=([===[-- <pack pl.utils> --
+--- Generally useful routines.
+-- See  @{01-introduction.md.Generally_useful_functions|the Guide}.
+-- @module pl.utils
+local format,gsub,byte = string.format,string.gsub,string.byte
+local compat = require 'pl.compat'
+local clock = os.clock
+local stdout = io.stdout
+local append = table.insert
+local unpack = rawget(_G,'unpack') or rawget(table,'unpack')
+
+local collisions = {}
+
+local utils = {
+    _VERSION = "1.2.1",
+    lua51 = compat.lua51,
+    setfenv = compat.setfenv,
+    getfenv = compat.getfenv,
+    load = compat.load,
+    execute = compat.execute,
+    dir_separator = _G.package.config:sub(1,1),
+    unpack = unpack
+}
+
+--- end this program gracefully.
+-- @param code The exit code or a message to be printed
+-- @param ... extra arguments for message's format'
+-- @see utils.fprintf
+function utils.quit(code,...)
+    if type(code) == 'string' then
+        utils.fprintf(io.stderr,code,...)
+        code = -1
+    else
+        utils.fprintf(io.stderr,...)
+    end
+    io.stderr:write('\n')
+    os.exit(code)
+end
+
+--- print an arbitrary number of arguments using a format.
+-- @param fmt The format (see string.format)
+-- @param ... Extra arguments for format
+function utils.printf(fmt,...)
+    utils.assert_string(1,fmt)
+    utils.fprintf(stdout,fmt,...)
+end
+
+--- write an arbitrary number of arguments to a file using a format.
+-- @param f File handle to write to.
+-- @param fmt The format (see string.format).
+-- @param ... Extra arguments for format
+function utils.fprintf(f,fmt,...)
+    utils.assert_string(2,fmt)
+    f:write(format(fmt,...))
+end
+
+local function import_symbol(T,k,v,libname)
+    local key = rawget(T,k)
+    -- warn about collisions!
+    if key and k ~= '_M' and k ~= '_NAME' and k ~= '_PACKAGE' and k ~= '_VERSION' then
+        utils.printf("warning: '%s.%s' overrides existing symbol\n",libname,k)
+    end
+    rawset(T,k,v)
+end
+
+local function lookup_lib(T,t)
+    for k,v in pairs(T) do
+        if v == t then return k end
+    end
+    return '?'
+end
+
+local already_imported = {}
+
+--- take a table and 'inject' it into the local namespace.
+-- @param t The Table
+-- @param T An optional destination table (defaults to callers environment)
+function utils.import(t,T)
+    T = T or _G
+    t = t or utils
+    if type(t) == 'string' then
+        t = require (t)
+    end
+    local libname = lookup_lib(T,t)
+    if already_imported[t] then return end
+    already_imported[t] = libname
+    for k,v in pairs(t) do
+        import_symbol(T,k,v,libname)
+    end
+end
+
+utils.patterns = {
+    FLOAT = '[%+%-%d]%d*%.?%d*[eE]?[%+%-]?%d*',
+    INTEGER = '[+%-%d]%d*',
+    IDEN = '[%a_][%w_]*',
+    FILE = '[%a%.\\][:%][%w%._%-\\]*'
+}
+
+--- escape any 'magic' characters in a string
+-- @param s The input string
+function utils.escape(s)
+    utils.assert_string(1,s)
+    return (s:gsub('[%-%.%+%[%]%(%)%$%^%%%?%*]','%%%1'))
+end
+
+--- return either of two values, depending on a condition.
+-- @param cond A condition
+-- @param value1 Value returned if cond is true
+-- @param value2 Value returned if cond is false (can be optional)
+function utils.choose(cond,value1,value2)
+    if cond then return value1
+    else return value2
+    end
+end
+
+local raise
+
+--- return the contents of a file as a string
+-- @param filename The file path
+-- @param is_bin open in binary mode
+-- @return file contents
+function utils.readfile(filename,is_bin)
+    local mode = is_bin and 'b' or ''
+    utils.assert_string(1,filename)
+    local f,err = io.open(filename,'r'..mode)
+    if not f then return utils.raise (err) end
+    local res,err = f:read('*a')
+    f:close()
+    if not res then return raise (err) end
+    return res
+end
+
+--- write a string to a file
+-- @param filename The file path
+-- @param str The string
+-- @return true or nil
+-- @return error message
+-- @raise error if filename or str aren't strings
+function utils.writefile(filename,str)
+    utils.assert_string(1,filename)
+    utils.assert_string(2,str)
+    local f,err = io.open(filename,'w')
+    if not f then return raise(err) end
+    f:write(str)
+    f:close()
+    return true
+end
+
+--- return the contents of a file as a list of lines
+-- @param filename The file path
+-- @return file contents as a table
+-- @raise errror if filename is not a string
+function utils.readlines(filename)
+    utils.assert_string(1,filename)
+    local f,err = io.open(filename,'r')
+    if not f then return raise(err) end
+    local res = {}
+    for line in f:lines() do
+        append(res,line)
+    end
+    f:close()
+    return res
+end
+
+--- split a string into a list of strings separated by a delimiter.
+-- @param s The input string
+-- @param re A Lua string pattern; defaults to '%s+'
+-- @param plain don't use Lua patterns
+-- @param n optional maximum number of splits
+-- @return a list-like table
+-- @raise error if s is not a string
+function utils.split(s,re,plain,n)
+    utils.assert_string(1,s)
+    local find,sub,append = string.find, string.sub, table.insert
+    local i1,ls = 1,{}
+    if not re then re = '%s+' end
+    if re == '' then return {s} end
+    while true do
+        local i2,i3 = find(s,re,i1,plain)
+        if not i2 then
+            local last = sub(s,i1)
+            if last ~= '' then append(ls,last) end
+            if #ls == 1 and ls[1] == '' then
+                return {}
+            else
+                return ls
+            end
+        end
+        append(ls,sub(s,i1,i2-1))
+        if n and #ls == n then
+            ls[#ls] = sub(s,i1)
+            return ls
+        end
+        i1 = i3+1
+    end
+end
+
+--- split a string into a number of values.
+-- @param s the string
+-- @param re the delimiter, default space
+-- @return n values
+-- @usage first,next = splitv('jane:doe',':')
+-- @see split
+function utils.splitv (s,re)
+    return unpack(utils.split(s,re))
+end
+
+--- convert an array of values to strings.
+-- @param t a list-like table
+-- @param temp buffer to use, otherwise allocate
+-- @param tostr custom tostring function, called with (value,index).
+-- Otherwise use `tostring`
+-- @return the converted buffer
+function utils.array_tostring (t,temp,tostr)
+    temp, tostr = temp or {}, tostr or tostring
+    for i = 1,#t do
+        temp[i] = tostr(t[i],i)
+    end
+    return temp
+end
+
+--- execute a shell command and return the output.
+-- This function redirects the output to tempfiles and returns the content of those files.
+-- @param cmd a shell command
+-- @param bin boolean, if true, read output as binary file
+-- @return true if successful
+-- @return actual return code
+-- @return stdout output (string)
+-- @return errout output (string)
+function utils.executeex(cmd, bin)
+    local mode
+    local outfile = os.tmpname()
+    local errfile = os.tmpname()
+
+    if utils.dir_separator == '\\' then
+        outfile = os.getenv('TEMP')..outfile
+        errfile = os.getenv('TEMP')..errfile
+    end
+    cmd = cmd .. [[ >"]]..outfile..[[" 2>"]]..errfile..[["]]
+
+    local success, retcode = utils.execute(cmd)
+    local outcontent = utils.readfile(outfile, bin)
+    local errcontent = utils.readfile(errfile, bin)
+    os.remove(outfile)
+    os.remove(errfile)
+    return success, retcode, (outcontent or ""), (errcontent or "")
+end
+
+--- 'memoize' a function (cache returned value for next call).
+-- This is useful if you have a function which is relatively expensive,
+-- but you don't know in advance what values will be required, so
+-- building a table upfront is wasteful/impossible.
+-- @param func a function of at least one argument
+-- @return a function with at least one argument, which is used as the key.
+function utils.memoize(func)
+    return setmetatable({}, {
+        __index = function(self, k, ...)
+            local v = func(k,...)
+            self[k] = v
+            return v
+        end,
+        __call = function(self, k) return self[k] end
+    })
+end
+
+
+utils.stdmt = {
+    List = {_name='List'}, Map = {_name='Map'},
+    Set = {_name='Set'}, MultiMap = {_name='MultiMap'}
+}
+
+local _function_factories = {}
+
+--- associate a function factory with a type.
+-- A function factory takes an object of the given type and
+-- returns a function for evaluating it
+-- @tab mt metatable
+-- @func fun a callable that returns a function
+function utils.add_function_factory (mt,fun)
+    _function_factories[mt] = fun
+end
+
+local function _string_lambda(f)
+    local raise = utils.raise
+    if f:find '^|' or f:find '_' then
+        local args,body = f:match '|([^|]*)|(.+)'
+        if f:find '_' then
+            args = '_'
+            body = f
+        else
+            if not args then return raise 'bad string lambda' end
+        end
+        local fstr = 'return function('..args..') return '..body..' end'
+        local fn,err = utils.load(fstr)
+        if not fn then return raise(err) end
+        fn = fn()
+        return fn
+    else return raise 'not a string lambda'
+    end
+end
+
+--- an anonymous function as a string. This string is either of the form
+-- '|args| expression' or is a function of one argument, '_'
+-- @param lf function as a string
+-- @return a function
+-- @usage string_lambda '|x|x+1' (2) == 3
+-- @usage string_lambda '_+1 (2) == 3
+-- @function utils.string_lambda
+utils.string_lambda = utils.memoize(_string_lambda)
+
+local ops
+
+--- process a function argument.
+-- This is used throughout Penlight and defines what is meant by a function:
+-- Something that is callable, or an operator string as defined by <code>pl.operator</code>,
+-- such as '>' or '#'. If a function factory has been registered for the type, it will
+-- be called to get the function.
+-- @param idx argument index
+-- @param f a function, operator string, or callable object
+-- @param msg optional error message
+-- @return a callable
+-- @raise if idx is not a number or if f is not callable
+function utils.function_arg (idx,f,msg)
+    utils.assert_arg(1,idx,'number')
+    local tp = type(f)
+    if tp == 'function' then return f end  -- no worries!
+    -- ok, a string can correspond to an operator (like '==')
+    if tp == 'string' then
+        if not ops then ops = require 'pl.operator'.optable end
+        local fn = ops[f]
+        if fn then return fn end
+        local fn, err = utils.string_lambda(f)
+        if not fn then error(err..': '..f) end
+        return fn
+    elseif tp == 'table' or tp == 'userdata' then
+        local mt = getmetatable(f)
+        if not mt then error('not a callable object',2) end
+        local ff = _function_factories[mt]
+        if not ff then
+            if not mt.__call then error('not a callable object',2) end
+            return f
+        else
+            return ff(f) -- we have a function factory for this type!
+        end
+    end
+    if not msg then msg = " must be callable" end
+    if idx > 0 then
+        error("argument "..idx..": "..msg,2)
+    else
+        error(msg,2)
+    end
+end
+
+--- bind the first argument of the function to a value.
+-- @param fn a function of at least two values (may be an operator string)
+-- @param p a value
+-- @return a function such that f(x) is fn(p,x)
+-- @raise same as @{function_arg}
+-- @see func.bind1
+function utils.bind1 (fn,p)
+    fn = utils.function_arg(1,fn)
+    return function(...) return fn(p,...) end
+end
+
+--- bind the second argument of the function to a value.
+-- @param fn a function of at least two values (may be an operator string)
+-- @param p a value
+-- @return a function such that f(x) is fn(x,p)
+-- @raise same as @{function_arg}
+function utils.bind2 (fn,p)
+    fn = utils.function_arg(1,fn)
+    return function(x,...) return fn(x,p,...) end
+end
+
+
+--- assert that the given argument is in fact of the correct type.
+-- @param n argument index
+-- @param val the value
+-- @param tp the type
+-- @param verify an optional verfication function
+-- @param msg an optional custom message
+-- @param lev optional stack position for trace, default 2
+-- @raise if the argument n is not the correct type
+-- @usage assert_arg(1,t,'table')
+-- @usage assert_arg(n,val,'string',path.isdir,'not a directory')
+function utils.assert_arg (n,val,tp,verify,msg,lev)
+    if type(val) ~= tp then
+        error(("argument %d expected a '%s', got a '%s'"):format(n,tp,type(val)),lev or 2)
+    end
+    if verify and not verify(val) then
+        error(("argument %d: '%s' %s"):format(n,val,msg),lev or 2)
+    end
+end
+
+--- assert the common case that the argument is a string.
+-- @param n argument index
+-- @param val a value that must be a string
+-- @raise val must be a string
+function utils.assert_string (n,val)
+    utils.assert_arg(n,val,'string',nil,nil,3)
+end
+
+local err_mode = 'default'
+
+--- control the error strategy used by Penlight.
+-- Controls how <code>utils.raise</code> works; the default is for it
+-- to return nil and the error string, but if the mode is 'error' then
+-- it will throw an error. If mode is 'quit' it will immediately terminate
+-- the program.
+-- @param mode - either 'default', 'quit'  or 'error'
+-- @see utils.raise
+function utils.on_error (mode)
+    if ({['default'] = 1, ['quit'] = 2, ['error'] = 3})[mode] then
+      err_mode = mode
+    else
+      -- fail loudly
+      if err_mode == 'default' then err_mode = 'error' end
+      utils.raise("Bad argument expected string; 'default', 'quit', or 'error'. Got '"..tostring(mode).."'")
+    end
+end
+
+--- used by Penlight functions to return errors.  Its global behaviour is controlled
+-- by <code>utils.on_error</code>
+-- @param err the error string.
+-- @see utils.on_error
+function utils.raise (err)
+    if err_mode == 'default' then return nil,err
+    elseif err_mode == 'quit' then utils.quit(err)
+    else error(err,2)
+    end
+end
+
+--- is the object of the specified type?.
+-- If the type is a string, then use type, otherwise compare with metatable
+-- @param obj An object to check
+-- @param tp String of what type it should be
+function utils.is_type (obj,tp)
+    if type(tp) == 'string' then return type(obj) == tp end
+    local mt = getmetatable(obj)
+    return tp == mt
+end
+
+raise = utils.raise
+
+--- load a code string or bytecode chunk.
+-- @param code Lua code as a string or bytecode
+-- @param name for source errors
+-- @param mode kind of chunk, 't' for text, 'b' for bytecode, 'bt' for all (default)
+-- @param env  the environment for the new chunk (default nil)
+-- @return compiled chunk
+-- @return error message (chunk is nil)
+-- @function utils.load
+
+---------------
+-- Get environment of a function.
+-- With Lua 5.2, may return nil for a function with no global references!
+-- Based on code by [Sergey Rozhenko](http://lua-users.org/lists/lua-l/2010-06/msg00313.html)
+-- @param f a function or a call stack reference
+-- @function utils.setfenv
+
+---------------
+-- Set environment of a function
+-- @param f a function or a call stack reference
+-- @param env a table that becomes the new environment of `f`
+-- @function utils.setfenv
+
+--- execute a shell command.
+-- This is a compatibility function that returns the same for Lua 5.1 and Lua 5.2
+-- @param cmd a shell command
+-- @return true if successful
+-- @return actual return code
+-- @function utils.execute
+
+return utils
+
+
+]===]):gsub('\\([%]%[]===)\\([%]%[])','%1%2')
+assert(not sources["pl.lexer"])sources["pl.lexer"]=([===[-- <pack pl.lexer> --
+--- Lexical scanner for creating a sequence of tokens from text.
+-- `lexer.scan(s)` returns an iterator over all tokens found in the
+-- string `s`. This iterator returns two values, a token type string
+-- (such as 'string' for quoted string, 'iden' for identifier) and the value of the
+-- token.
+--
+-- Versions specialized for Lua and C are available; these also handle block comments
+-- and classify keywords as 'keyword' tokens. For example:
+--
+--    > s = 'for i=1,n do'
+--    > for t,v in lexer.lua(s)  do print(t,v) end
+--    keyword for
+--    iden    i
+--    =       =
+--    number  1
+--    ,       ,
+--    iden    n
+--    keyword do
+--
+-- See the Guide for further @{06-data.md.Lexical_Scanning|discussion}
+-- @module pl.lexer
+
+local yield,wrap = coroutine.yield,coroutine.wrap
+local strfind = string.find
+local strsub = string.sub
+local append = table.insert
+
+local function assert_arg(idx,val,tp)
+    if type(val) ~= tp then
+        error("argument "..idx.." must be "..tp, 2)
+    end
+end
+
+local lexer = {}
+
+local NUMBER1 = '^[%+%-]?%d+%.?%d*[eE][%+%-]?%d+'
+local NUMBER2 = '^[%+%-]?%d+%.?%d*'
+local NUMBER3 = '^0x[%da-fA-F]+'
+local NUMBER4 = '^%d+%.?%d*[eE][%+%-]?%d+'
+local NUMBER5 = '^%d+%.?%d*'
+local IDEN = '^[%a_][%w_]*'
+local WSPACE = '^%s+'
+local STRING0 = [[^(['\"]).-\\%1]]
+local STRING1 = [[^(['\"]).-[^\]%1]]
+local STRING3 = "^((['\"])%2)" -- empty string
+local PREPRO = '^#.-[^\\]\n'
+
+local plain_matches,lua_matches,cpp_matches,lua_keyword,cpp_keyword
+
+local function tdump(tok)
+    return yield(tok,tok)
+end
+
+local function ndump(tok,options)
+    if options and options.number then
+        tok = tonumber(tok)
+    end
+    return yield("number",tok)
+end
+
+-- regular strings, single or double quotes; usually we want them
+-- without the quotes
+local function sdump(tok,options)
+    if options and options.string then
+        tok = tok:sub(2,-2)
+    end
+    return yield("string",tok)
+end
+
+-- long Lua strings need extra work to get rid of the quotes
+local function sdump_l(tok,options,findres)
+    if options and options.string then
+        local quotelen = 3
+        if findres[3] then
+            quotelen = quotelen + findres[3]:len()
+        end
+        tok = tok:sub(quotelen,-1 * quotelen)
+    end
+    return yield("string",tok)
+end
+
+local function chdump(tok,options)
+    if options and options.string then
+        tok = tok:sub(2,-2)
+    end
+    return yield("char",tok)
+end
+
+local function cdump(tok)
+    return yield('comment',tok)
+end
+
+local function wsdump (tok)
+    return yield("space",tok)
+end
+
+local function pdump (tok)
+    return yield('prepro',tok)
+end
+
+local function plain_vdump(tok)
+    return yield("iden",tok)
+end
+
+local function lua_vdump(tok)
+    if lua_keyword[tok] then
+        return yield("keyword",tok)
+    else
+        return yield("iden",tok)
+    end
+end
+
+local function cpp_vdump(tok)
+    if cpp_keyword[tok] then
+        return yield("keyword",tok)
+    else
+        return yield("iden",tok)
+    end
+end
+
+--- create a plain token iterator from a string or file-like object.
+-- @string s the string
+-- @tab matches an optional match table (set of pattern-action pairs)
+-- @tab[opt] filter a table of token types to exclude, by default `{space=true}`
+-- @tab[opt] options a table of options; by default, `{number=true,string=true}`,
+-- which means convert numbers and strip string quotes.
+function lexer.scan (s,matches,filter,options)
+    --assert_arg(1,s,'string')
+    local file = type(s) ~= 'string' and s
+    filter = filter or {space=true}
+    options = options or {number=true,string=true}
+    if filter then
+        if filter.space then filter[wsdump] = true end
+        if filter.comments then
+            filter[cdump] = true
+        end
+    end
+    if not matches then
+        if not plain_matches then
+            plain_matches = {
+                {WSPACE,wsdump},
+                {NUMBER3,ndump},
+                {IDEN,plain_vdump},
+                {NUMBER1,ndump},
+                {NUMBER2,ndump},
+                {STRING3,sdump},
+                {STRING0,sdump},
+                {STRING1,sdump},
+                {'^.',tdump}
+            }
+        end
+        matches = plain_matches
+    end
+    local function lex ()
+        if type(s)=='string' and s=='' then return end
+        local findres,i1,i2,idx,res1,res2,tok,pat,fun,capt
+        local line = 1
+        if file then s = file:read()..'\n' end
+        local sz = #s
+        local idx = 1
+        --print('sz',sz)
+        while true do
+            for _,m in ipairs(matches) do
+                pat = m[1]
+                fun = m[2]
+                findres = { strfind(s,pat,idx) }
+                i1 = findres[1]
+                i2 = findres[2]
+                if i1 then
+                    tok = strsub(s,i1,i2)
+                    idx = i2 + 1
+                    if not (filter and filter[fun]) then
+                        lexer.finished = idx > sz
+                        res1,res2 = fun(tok,options,findres)
+                    end
+                    if res1 then
+                        local tp = type(res1)
+                        -- insert a token list
+                        if tp=='table' then
+                            yield('','')
+                            for _,t in ipairs(res1) do
+                                yield(t[1],t[2])
+                            end
+                        elseif tp == 'string' then -- or search up to some special pattern
+                            i1,i2 = strfind(s,res1,idx)
+                            if i1 then
+                                tok = strsub(s,i1,i2)
+                                idx = i2 + 1
+                                yield('',tok)
+                            else
+                                yield('','')
+                                idx = sz + 1
+                            end
+                            --if idx > sz then return end
+                        else
+                            yield(line,idx)
+                        end
+                    end
+                    if idx > sz then
+                        if file then
+                            --repeat -- next non-empty line
+                                line = line + 1
+                                s = file:read()
+                                if not s then return end
+                            --until not s:match '^%s*$'
+                            s = s .. '\n'
+                            idx ,sz = 1,#s
+                            break
+                        else
+                            return
+                        end
+                    else break end
+                end
+            end
+        end
+    end
+    return wrap(lex)
+end
+
+local function isstring (s)
+    return type(s) == 'string'
+end
+
+--- insert tokens into a stream.
+-- @param tok a token stream
+-- @param a1 a string is the type, a table is a token list and
+-- a function is assumed to be a token-like iterator (returns type & value)
+-- @string a2 a string is the value
+function lexer.insert (tok,a1,a2)
+    if not a1 then return end
+    local ts
+    if isstring(a1) and isstring(a2) then
+        ts = {{a1,a2}}
+    elseif type(a1) == 'function' then
+        ts = {}
+        for t,v in a1() do
+            append(ts,{t,v})
+        end
+    else
+        ts = a1
+    end
+    tok(ts)
+end
+
+--- get everything in a stream upto a newline.
+-- @param tok a token stream
+-- @return a string
+function lexer.getline (tok)
+    local t,v = tok('.-\n')
+    return v
+end
+
+--- get current line number.
+-- Only available if the input source is a file-like object.
+-- @param tok a token stream
+-- @return the line number and current column
+function lexer.lineno (tok)
+    return tok(0)
+end
+
+--- get the rest of the stream.
+-- @param tok a token stream
+-- @return a string
+function lexer.getrest (tok)
+    local t,v = tok('.+')
+    return v
+end
+
+--- get the Lua keywords as a set-like table.
+-- So `res["and"]` etc would be `true`.
+-- @return a table
+function lexer.get_keywords ()
+    if not lua_keyword then
+        lua_keyword = {
+            ["and"] = true, ["break"] = true,  ["do"] = true,
+            ["else"] = true, ["elseif"] = true, ["end"] = true,
+            ["false"] = true, ["for"] = true, ["function"] = true,
+            ["if"] = true, ["in"] = true,  ["local"] = true, ["nil"] = true,
+            ["not"] = true, ["or"] = true, ["repeat"] = true,
+            ["return"] = true, ["then"] = true, ["true"] = true,
+            ["until"] = true,  ["while"] = true
+        }
+    end
+    return lua_keyword
+end
+
+--- create a Lua token iterator from a string or file-like object.
+-- Will return the token type and value.
+-- @string s the string
+-- @tab[opt] filter a table of token types to exclude, by default `{space=true,comments=true}`
+-- @tab[opt] options a table of options; by default, `{number=true,string=true}`,
+-- which means convert numbers and strip string quotes.
+function lexer.lua(s,filter,options)
+    filter = filter or {space=true,comments=true}
+    lexer.get_keywords()
+    if not lua_matches then
+        lua_matches = {
+            {WSPACE,wsdump},
+            {NUMBER3,ndump},
+            {IDEN,lua_vdump},
+            {NUMBER4,ndump},
+            {NUMBER5,ndump},
+            {STRING3,sdump},
+            {STRING0,sdump},
+            {STRING1,sdump},
+            {'^%-%-%[(=*)%[.-%]%1%]',cdump},
+            {'^%-%-.-\n',cdump},
+            {'^%[(=*)%[.-%]%1%]',sdump_l},
+            {'^==',tdump},
+            {'^~=',tdump},
+            {'^<=',tdump},
+            {'^>=',tdump},
+            {'^%.%.%.',tdump},
+            {'^%.%.',tdump},
+            {'^.',tdump}
+        }
+    end
+    return lexer.scan(s,lua_matches,filter,options)
+end
+
+--- create a C/C++ token iterator from a string or file-like object.
+-- Will return the token type type and value.
+-- @string s the string
+-- @tab[opt] filter a table of token types to exclude, by default `{space=true,comments=true}`
+-- @tab[opt] options a table of options; by default, `{number=true,string=true}`,
+-- which means convert numbers and strip string quotes.
+function lexer.cpp(s,filter,options)
+    filter = filter or {comments=true}
+    if not cpp_keyword then
+        cpp_keyword = {
+            ["class"] = true, ["break"] = true,  ["do"] = true, ["sizeof"] = true,
+            ["else"] = true, ["continue"] = true, ["struct"] = true,
+            ["false"] = true, ["for"] = true, ["public"] = true, ["void"] = true,
+            ["private"] = true, ["protected"] = true, ["goto"] = true,
+            ["if"] = true, ["static"] = true,  ["const"] = true, ["typedef"] = true,
+            ["enum"] = true, ["char"] = true, ["int"] = true, ["bool"] = true,
+            ["long"] = true, ["float"] = true, ["true"] = true, ["delete"] = true,
+            ["double"] = true,  ["while"] = true, ["new"] = true,
+            ["namespace"] = true, ["try"] = true, ["catch"] = true,
+            ["switch"] = true, ["case"] = true, ["extern"] = true,
+            ["return"] = true,["default"] = true,['unsigned']  = true,['signed'] = true,
+            ["union"] =  true, ["volatile"] = true, ["register"] = true,["short"] = true,
+        }
+    end
+    if not cpp_matches then
+        cpp_matches = {
+            {WSPACE,wsdump},
+            {PREPRO,pdump},
+            {NUMBER3,ndump},
+            {IDEN,cpp_vdump},
+            {NUMBER4,ndump},
+            {NUMBER5,ndump},
+            {STRING3,sdump},
+            {STRING1,chdump},
+            {'^//.-\n',cdump},
+            {'^/%*.-%*/',cdump},
+            {'^==',tdump},
+            {'^!=',tdump},
+            {'^<=',tdump},
+            {'^>=',tdump},
+            {'^->',tdump},
+            {'^&&',tdump},
+            {'^||',tdump},
+            {'^%+%+',tdump},
+            {'^%-%-',tdump},
+            {'^%+=',tdump},
+            {'^%-=',tdump},
+            {'^%*=',tdump},
+            {'^/=',tdump},
+            {'^|=',tdump},
+            {'^%^=',tdump},
+            {'^::',tdump},
+            {'^.',tdump}
+        }
+    end
+    return lexer.scan(s,cpp_matches,filter,options)
+end
+
+--- get a list of parameters separated by a delimiter from a stream.
+-- @param tok the token stream
+-- @string[opt=')'] endtoken end of list. Can be '\n'
+-- @string[opt=','] delim separator
+-- @return a list of token lists.
+function lexer.get_separated_list(tok,endtoken,delim)
+    endtoken = endtoken or ')'
+    delim = delim or ','
+    local parm_values = {}
+    local level = 1 -- used to count ( and )
+    local tl = {}
+    local function tappend (tl,t,val)
+        val = val or t
+        append(tl,{t,val})
+    end
+    local is_end
+    if endtoken == '\n' then
+        is_end = function(t,val)
+            return t == 'space' and val:find '\n'
+        end
+    else
+        is_end = function (t)
+            return t == endtoken
+        end
+    end
+    local token,value
+    while true do
+        token,value=tok()
+        if not token then return nil,'EOS' end -- end of stream is an error!
+        if is_end(token,value) and level == 1 then
+            append(parm_values,tl)
+            break
+        elseif token == '(' then
+            level = level + 1
+            tappend(tl,'(')
+        elseif token == ')' then
+            level = level - 1
+            if level == 0 then -- finished with parm list
+                append(parm_values,tl)
+                break
+            else
+                tappend(tl,')')
+            end
+        elseif token == delim and level == 1 then
+            append(parm_values,tl) -- a new parm
+            tl = {}
+        else
+            tappend(tl,token,value)
+        end
+    end
+    return parm_values,{token,value}
+end
+
+--- get the next non-space token from the stream.
+-- @param tok the token stream.
+function lexer.skipws (tok)
+    local t,v = tok()
+    while t == 'space' do
+        t,v = tok()
+    end
+    return t,v
+end
+
+local skipws = lexer.skipws
+
+--- get the next token, which must be of the expected type.
+-- Throws an error if this type does not match!
+-- @param tok the token stream
+-- @string expected_type the token type
+-- @bool no_skip_ws whether we should skip whitespace
+function lexer.expecting (tok,expected_type,no_skip_ws)
+    assert_arg(1,tok,'function')
+    assert_arg(2,expected_type,'string')
+    local t,v
+    if no_skip_ws then
+        t,v = tok()
+    else
+        t,v = skipws(tok)
+    end
+    if t ~= expected_type then error ("expecting "..expected_type,2) end
+    return v
+end
+
+return lexer
+]===]):gsub('\\([%]%[]===)\\([%]%[])','%1%2')
+assert(not sources["pl.compat"])sources["pl.compat"]=([===[-- <pack pl.compat> --
+return {}
+]===]):gsub('\\([%]%[]===)\\([%]%[])','%1%2')
 assert(not sources["lunajson"])sources["lunajson"]=([===[-- <pack lunajson> --
 do local sources, priorities = {}, {};assert(not sources["lunajson._str_lib"])sources["lunajson._str_lib"]=(\[===\[-- <pack lunajson._str_lib> --
 local inf = math.huge
@@ -8155,11 +9159,12 @@ end
 \]===\]):gsub('\\([%]%[]===)\\([%]%[])','%1%2')
 assert(not sources["lunajson.sax"])sources["lunajson.sax"]=(\[===\[-- <pack lunajson.sax> --
 local error = error
-local byte, char, find, gsub, match, sub =
-	string.byte, string.char, string.find, string.gsub, string.match, string.sub
+local byte, char, find, gsub, match, sub = string.byte, string.char, string.find, string.gsub, string.match, string.sub
 local tonumber = tonumber
-local tostring, type, unpack = tonumber, type, table.unpack or unpack
+local tostring, type, unpack = tostring, type, table.unpack or unpack
 
+-- The function that interprets JSON strings is separated into another file so as to
+-- use bitwise operation to speedup unicode codepoints processing on Lua 5.3.
 local genstrlib
 if _VERSION == "Lua 5.3" then
 	genstrlib = require 'lunajson._str_lib_lua53'
@@ -8175,10 +9180,9 @@ local function newparser(src, saxtbl)
 	local json, jsonnxt
 	local jsonlen, pos, acc = 0, 1, 0
 
-	local dispatcher
-	-- it is temporary for dispatcher[c] and
-	-- dummy for 1st return value of find
-	local f
+	-- `f` is the temporary for dispatcher[c] and
+	-- the dummy for the first return value of `find`
+	local dispatcher, f
 
 	-- initialize
 	if type(src) == 'string' then
@@ -8217,7 +9221,9 @@ local function newparser(src, saxtbl)
 	local sax_boolean = saxtbl.boolean or nop
 	local sax_null = saxtbl.null or nop
 
-	-- helper
+	--[[
+		Helper
+	--]]
 	local function tryc()
 		local c = byte(json, pos)
 		if not c then
@@ -8235,7 +9241,7 @@ local function newparser(src, saxtbl)
 		return tryc() or parseerror("unexpected termination")
 	end
 
-	local function spaces()
+	local function spaces() -- skip spaces and prepare the next char
 		while true do
 			f, pos = find(json, '^[ \n\r\t]*', pos)
 			if pos ~= jsonlen then
@@ -8249,12 +9255,17 @@ local function newparser(src, saxtbl)
 		end
 	end
 
-	-- parse error
+	--[[
+		Invalid
+	--]]
 	local function f_err()
 		parseerror('invalid value')
 	end
 
-	-- parse constants
+	--[[
+		Constants
+	--]]
+	-- fallback slow constants parser
 	local function generic_constant(target, targetlen, ret, sax_f)
 		for i = 1, targetlen do
 			local c = tellc()
@@ -8266,6 +9277,7 @@ local function newparser(src, saxtbl)
 		return sax_f(ret)
 	end
 
+	-- null
 	local function f_nul()
 		if sub(json, pos, pos+2) == 'ull' then
 			pos = pos+3
@@ -8274,6 +9286,7 @@ local function newparser(src, saxtbl)
 		return generic_constant('ull', 3, nil, sax_null)
 	end
 
+	-- false
 	local function f_fls()
 		if sub(json, pos, pos+3) == 'alse' then
 			pos = pos+4
@@ -8282,6 +9295,7 @@ local function newparser(src, saxtbl)
 		return generic_constant('alse', 4, false, sax_boolean)
 	end
 
+	-- true
 	local function f_tru()
 		if sub(json, pos, pos+2) == 'rue' then
 			pos = pos+3
@@ -8290,10 +9304,15 @@ local function newparser(src, saxtbl)
 		return generic_constant('rue', 3, true, sax_boolean)
 	end
 
-	-- parse numbers
+	--[[
+		Numbers
+		Conceptually, the longest prefix that matches to `(0|[1-9][0-9]*)(\.[0-9]*)?([eE][+-]?[0-9]*)?`
+		(in regexp) is captured as a number and its conformance to the JSON spec is checked.
+	--]]
+	-- deal with non-standard locales
 	local radixmark = match(tostring(0.5), '[^0-9]')
 	local fixedtonumber = tonumber
-	if radixmark ~= '.' then
+	if radixmark ~= '.' then -- deals with non-standard locales
 		if find(radixmark, '%W') then
 			radixmark = '%' .. radixmark
 		end
@@ -8302,148 +9321,134 @@ local function newparser(src, saxtbl)
 		end
 	end
 
+	-- fallback slow parser
 	local function generic_number(mns)
 		local buf = {}
 		local i = 1
 
 		local c = byte(json, pos)
 		pos = pos+1
-		if c == 0x30 then
+
+		local function nxt()
 			buf[i] = c
 			i = i+1
 			c = tryc()
 			pos = pos+1
-			if c and 0x30 <= c and c < 0x3A then
-				parseerror('invalid number')
-			end
+		end
+
+		if c == 0x30 then
+			nxt()
 		else
-			repeat
-				buf[i] = c
-				i = i+1
-				c = tryc()
-				pos = pos+1
-			until not (c and 0x30 <= c and c < 0x3A)
+			repeat nxt() until not (c and 0x30 <= c and c < 0x3A)
 		end
 		if c == 0x2E then
-			local oldi = i
-			repeat
-				buf[i] = c
-				i = i+1
-				c = tryc()
-				pos = pos+1
-			until not (c and 0x30 <= c and c < 0x3A)
-			if oldi+1 == i then
+			nxt()
+			if not (c and 0x30 <= c and c < 0x3A) then
 				parseerror('invalid number')
 			end
+			repeat nxt() until not (c and 0x30 <= c and c < 0x3A)
 		end
 		if c == 0x45 or c == 0x65 then
-			repeat
-				buf[i] = c
-				i = i+1
-				c = tryc()
-				pos = pos+1
-			until not (c and ((0x30 <= c and c < 0x3A) or (c == 0x2B or c == 0x2D)))
+			nxt()
+			if c == 0x2B or c == 0x2D then
+				nxt()
+			end
+			if not (c and 0x30 <= c and c < 0x3A) then
+				parseerror('invalid number')
+			end
+			repeat nxt() until not (c and 0x30 <= c and c < 0x3A)
 		end
 		pos = pos-1
 
 		local num = char(unpack(buf))
-		num = fixedtonumber(num)
-		if num then
-			if mns then
-				num = -num
-			end
-			return sax_number(num)
-		end
-		parseerror('invalid number')
-	end
-
-	local function f_zro(mns)
-		local c = byte(json, pos)
-
-		if c == 0x2E then
-			local num = match(json, '^.[0-9]*', pos) -- skip 0
-			local pos2 = #num
-			if pos2 ~= 1 then
-				pos2 = pos + pos2
-				c = byte(json, pos2)
-				if c == 0x45 or c == 0x65 then
-					num = match(json, '^[^eE]*[eE][-+0-9]*', pos)
-					pos2 = pos + #num
-				end
-				num = fixedtonumber(num)
-				if num and pos2 <= jsonlen then
-					pos = pos2
-					if mns then
-						num = 0.0-num
-					else
-						num = num-0.0
-					end
-					return sax_number(num)
-				end
-			end
-			pos = pos-1
-			return generic_number(mns)
-		end
-
-		if c ~= 0x2C and c ~= 0x5D and c ~= 0x7D then -- check e or E when unusual char is detected
-			local pos2 = pos
-			pos = pos-1
-			if not c then
-				return generic_number(mns)
-			end
-			if 0x30 <= c and c < 0x3A then
-				parseerror('invalid number')
-			end
-			local num = match(json, '^.[eE][-+0-9]*', pos)
-			if num then
-				pos2 = pos + #num
-				num = fixedtonumber(num)
-				if not num or pos2 > jsonlen then
-					return generic_number(mns)
-				end
-			end
-			pos = pos2
-		end
-
-		if not mns then
-			return sax_number(0.0)
-		end
-		return sax_number(-0.0)
-	end
-
-	local function f_num(mns)
-		pos = pos-1
-		local num = match(json, '^[0-9]+%.?[0-9]*', pos)
-		local c = byte(num, -1)
-		if c == 0x2E then -- check that num is not ended by comma
-			return generic_number(mns)
-		end
-
-		local pos2 = pos + #num
-		c = byte(json, pos2)
-		if c == 0x45 or c == 0x65 then -- e or E?
-			num = match(json, '^[^eE]*[eE][-+0-9]*', pos)
-			pos2 = pos + #num
-			num = fixedtonumber(num)
-			if not num then
-				return generic_number(mns)
-			end
-		else
-			num = fixedtonumber(num)
-		end
-		if pos2 > jsonlen then
-			return generic_number(mns)
-		end
-		pos = pos2
-
+		num = fixedtonumber(num)-0.0
 		if mns then
-			num = 0.0-num
-		else
-			num = num-0.0
+			num = -num
 		end
 		return sax_number(num)
 	end
 
+	-- `0(\.[0-9]*)?([eE][+-]?[0-9]*)?`
+	local function f_zro(mns)
+		repeat
+			local postmp = pos
+			local num
+			local c = byte(json, postmp)
+
+			if c == 0x2E then -- is this `.`?
+				num = match(json, '^.[0-9]*', pos) -- skipping 0
+				local numlen = #num
+				if numlen == 1 then
+					break
+				end
+				postmp = pos + numlen
+				c = byte(json, postmp)
+			end
+
+			if c == 0x45 or c == 0x65 then -- is this e or E?
+				local numexp = match(json, '^[^eE]*[eE][-+]?[0-9]+', pos)
+				if not numexp then
+					break
+				end
+				if num then -- since `0e.*` is always 0.0, ignore those
+					num = numexp
+				end
+				postmp = pos + #numexp
+			end
+
+			if postmp > jsonlen then
+				break
+			end
+			pos = postmp
+			if num then
+				num = fixedtonumber(num)
+			else
+				num = 0.0
+			end
+			if mns then
+				num = -num
+			end
+			return sax_number(num)
+		until true
+
+		pos = pos-1
+		return generic_number(mns)
+	end
+
+	-- `[1-9][0-9]*(\.[0-9]*)?([eE][+-]?[0-9]*)?`
+	local function f_num(mns)
+		repeat
+			pos = pos-1
+			local num = match(json, '^.[0-9]*%.?[0-9]*', pos)
+			if byte(num, -1) == 0x2E then
+				break
+			end
+			local postmp = pos + #num
+			local c = byte(json, postmp)
+
+			if c == 0x45 or c == 0x65 then -- e or E?
+				num = match(json, '^[^eE]*[eE][-+]?[0-9]+', pos)
+				if not num then
+					break
+				end
+				postmp = pos + #num
+			end
+
+			if postmp > jsonlen then
+				break
+			end
+			pos = postmp
+			num = fixedtonumber(num)-0.0
+			if mns then
+				num = -num
+			end
+			return sax_number(num)
+		until true
+
+		return generic_number(mns)
+	end
+
+	-- skip minus sign
 	local function f_mns()
 		local c = byte(json, pos) or tellc()
 		if c then
@@ -8461,10 +9466,12 @@ local function newparser(src, saxtbl)
 		parseerror("invalid number")
 	end
 
-	-- parse strings
+	--[[
+		Strings
+	--]]
 	local f_str_lib = genstrlib(parseerror)
-	local f_str_surrogateok = f_str_lib.surrogateok
-	local f_str_subst = f_str_lib.subst
+	local f_str_surrogateok = f_str_lib.surrogateok -- whether codepoints for surrogate pair are correctly paired
+	local f_str_subst = f_str_lib.subst -- the function passed to gsub that interprets escapes
 
 	local function f_str(iskey)
 		local pos2 = pos
@@ -8472,7 +9479,7 @@ local function newparser(src, saxtbl)
 		local str = ''
 		local bs
 		while true do
-			while true do
+			while true do -- search '\' or '"'
 				newpos = find(json, '[\\"]', pos2)
 				if newpos then
 					break
@@ -8485,17 +9492,17 @@ local function newparser(src, saxtbl)
 				end
 				jsonnxt()
 			end
-			if byte(json, newpos) == 0x22 then
+			if byte(json, newpos) == 0x22 then -- break if '"'
 				break
 			end
-			pos2 = newpos+2
-			bs = true
+			pos2 = newpos+2 -- skip '\<char>'
+			bs = true -- remember that backslash occurs
 		end
 		str = str .. sub(json, pos, newpos-1)
 		pos = newpos+1
 
-		if bs then
-			str = gsub(str, '\\(.)([^\\]*)', f_str_subst)
+		if bs then -- check if backslash occurs
+			str = gsub(str, '\\(.)([^\\]*)', f_str_subst) -- interpret escapes
 			if not f_str_surrogateok() then
 				parseerror("invalid surrogate pair")
 			end
@@ -8507,30 +9514,33 @@ local function newparser(src, saxtbl)
 		return sax_string(str)
 	end
 
-	-- parse arrays
+	--[[
+		Arrays, Objects
+	--]]
+	-- arrays
 	local function f_ary()
 		sax_startarray()
 		spaces()
-		if byte(json, pos) ~= 0x5D then
+		if byte(json, pos) ~= 0x5D then -- check the closing bracket ']', that consists an empty array
 			local newpos
 			while true do
-				f = dispatcher[byte(json, pos)]
+				f = dispatcher[byte(json, pos)] -- parse value
 				pos = pos+1
 				f()
-				f, newpos = find(json, '^[ \n\r\t]*,[ \n\r\t]*', pos)
+				f, newpos = find(json, '^[ \n\r\t]*,[ \n\r\t]*', pos) -- check comma
 				if not newpos then
-					f, newpos = find(json, '^[ \n\r\t]*%]', pos)
+					f, newpos = find(json, '^[ \n\r\t]*%]', pos) -- check closing bracket
 					if newpos then
 						pos = newpos
 						break
 					end
-					spaces()
+					spaces() -- since the current chunk can be ended, skip spaces toward following chunks
 					local c = byte(json, pos)
-					if c == 0x2C then
+					if c == 0x2C then -- check comma again
 						pos = pos+1
 						spaces()
 						newpos = pos-1
-					elseif c == 0x5D then
+					elseif c == 0x5D then -- check closing bracket again
 						break
 					else
 						parseerror("no closing bracket of an array")
@@ -8546,11 +9556,11 @@ local function newparser(src, saxtbl)
 		return sax_endarray()
 	end
 
-	-- parse objects
+	-- objects
 	local function f_obj()
 		sax_startobject()
 		spaces()
-		if byte(json, pos) ~= 0x7D then
+		if byte(json, pos) ~= 0x7D then -- check the closing bracket `}`, that consists an empty object
 			local newpos
 			while true do
 				if byte(json, pos) ~= 0x22 then
@@ -8558,10 +9568,10 @@ local function newparser(src, saxtbl)
 				end
 				pos = pos+1
 				f_str(true)
-				f, newpos = find(json, '^[ \n\r\t]*:[ \n\r\t]*', pos)
+				f, newpos = find(json, '^[ \n\r\t]*:[ \n\r\t]*', pos) -- check colon
 				if not newpos then
-					spaces()
-					if byte(json, pos) ~= 0x3A then
+					spaces() -- since the current chunk can be ended, skip spaces toward following chunks
+					if byte(json, pos) ~= 0x3A then -- check colon again
 						parseerror("no colon after a key")
 					end
 					pos = pos+1
@@ -8572,23 +9582,23 @@ local function newparser(src, saxtbl)
 				if pos > jsonlen then
 					spaces()
 				end
-				f = dispatcher[byte(json, pos)]
+				f = dispatcher[byte(json, pos)] -- parse value
 				pos = pos+1
 				f()
-				f, newpos = find(json, '^[ \n\r\t]*,[ \n\r\t]*', pos)
+				f, newpos = find(json, '^[ \n\r\t]*,[ \n\r\t]*', pos) -- check comma
 				if not newpos then
-					f, newpos = find(json, '^[ \n\r\t]*}', pos)
+					f, newpos = find(json, '^[ \n\r\t]*}', pos) -- check closing bracket
 					if newpos then
 						pos = newpos
 						break
 					end
-					spaces()
+					spaces() -- since the current chunk can be ended, skip spaces toward following chunks
 					local c = byte(json, pos)
-					if c == 0x2C then
+					if c == 0x2C then -- check comma again
 						pos = pos+1
 						spaces()
 						newpos = pos-1
-					elseif c == 0x7D then
+					elseif c == 0x7D then -- check closing bracket again
 						break
 					else
 						parseerror("no closing bracket of an object")
@@ -8604,7 +9614,10 @@ local function newparser(src, saxtbl)
 		return sax_endobject()
 	end
 
-	-- key should be non-nil
+	--[[
+		The jump table to dispatch a parser for a value, indexed by the code of the value's first char.
+		Key should be non-nil.
+	--]]
 	dispatcher = {
 		       f_err, f_err, f_err, f_err, f_err, f_err, f_err, f_err, f_err, f_err, f_err, f_err, f_err, f_err, f_err,
 		f_err, f_err, f_err, f_err, f_err, f_err, f_err, f_err, f_err, f_err, f_err, f_err, f_err, f_err, f_err, f_err,
@@ -8617,6 +9630,9 @@ local function newparser(src, saxtbl)
 	}
 	dispatcher[0] = f_err
 
+	--[[
+		public funcitons
+	--]]
 	local function run()
 		spaces()
 		f = dispatcher[byte(json, pos)]
@@ -8680,6 +9696,8 @@ local byte, char, find, gsub, match, sub = string.byte, string.char, string.find
 local tonumber = tonumber
 local tostring, setmetatable = tostring, setmetatable
 
+-- The function that interprets JSON strings is separated into another file so as to
+-- use bitwise operation to speedup unicode codepoints processing on Lua 5.3.
 local genstrlib
 if _VERSION == "Lua 5.3" then
 	genstrlib = require 'lunajson._str_lib_lua53'
@@ -8692,22 +9710,28 @@ local _ENV = nil
 local function newdecoder()
 	local json, pos, nullv, arraylen
 
-	local dispatcher
-	-- it is temporary for dispatcher[c] and
-	-- dummy for 1st return value of find
-	local f
+	-- `f` is the temporary for dispatcher[c] and
+	-- the dummy for the first return value of `find`
+	local dispatcher, f
 
-	-- helper
+	--[[
+		Helper
+	--]]
 	local function decodeerror(errmsg)
 		error("parse error at " .. pos .. ": " .. errmsg)
 	end
 
-	-- parse error
+	--[[
+		Invalid
+	--]]
 	local function f_err()
 		decodeerror('invalid value')
 	end
 
-	-- parse constants
+	--[[
+		Constants
+	--]]
+	-- null
 	local function f_nul()
 		if sub(json, pos, pos+2) == 'ull' then
 			pos = pos+3
@@ -8716,6 +9740,7 @@ local function newdecoder()
 		decodeerror('invalid value')
 	end
 
+	-- false
 	local function f_fls()
 		if sub(json, pos, pos+3) == 'alse' then
 			pos = pos+4
@@ -8724,6 +9749,7 @@ local function newdecoder()
 		decodeerror('invalid value')
 	end
 
+	-- true
 	local function f_tru()
 		if sub(json, pos, pos+2) == 'rue' then
 			pos = pos+3
@@ -8732,7 +9758,12 @@ local function newdecoder()
 		decodeerror('invalid value')
 	end
 
-	-- parse numbers
+	--[[
+		Numbers
+		Conceptually, the longest prefix that matches to `-?(0|[1-9][0-9]*)(\.[0-9]*)?([eE][+-]?[0-9]*)?`
+		(in regexp) is captured as a number and its conformance to the JSON spec is checked.
+	--]]
+	-- deal with non-standard locales
 	local radixmark = match(tostring(0.5), '[^0-9]')
 	local fixedtonumber = tonumber
 	if radixmark ~= '.' then
@@ -8744,85 +9775,83 @@ local function newdecoder()
 		end
 	end
 
+	-- `0(\.[0-9]*)?([eE][+-]?[0-9]*)?`
 	local function f_zro(mns)
-		local c = byte(json, pos)
-
-		if c == 0x2E then
-			local num = match(json, '^.[0-9]*', pos) -- skip 0
-			local pos2 = #num
-			if pos2 ~= 1 then
-				pos2 = pos + pos2
-				c = byte(json, pos2)
-				if c == 0x45 or c == 0x65 then
-					num = match(json, '^[^eE]*[eE][-+0-9]*', pos)
-					pos2 = pos + #num
-				end
-				num = fixedtonumber(num)
-				if num then
-					pos = pos2
-					if mns then
-						num = 0.0-num
-					else
-						num = num-0.0
-					end
-					return num
-				end
+		repeat
+			local postmp = pos
+			local num
+			local c = byte(json, postmp)
+			if not c then
+				break
 			end
-			decodeerror('invalid number')
-		end
 
-		if c ~= 0x2C and c ~= 0x5D and c ~= 0x7D and c then -- unusual char is detected
-			if 0x30 <= c and c < 0x3A then
-				decodeerror('invalid number')
+			if c == 0x2E then -- is this `.`?
+				num = match(json, '^.[0-9]*', pos) -- skipping 0
+				local numlen = #num
+				if numlen == 1 then
+					break
+				end
+				postmp = pos + numlen
+				c = byte(json, postmp)
 			end
-			local pos2 = pos-1
-			local num = match(json, '^.[eE][-+0-9]*', pos2)
+
+			if c == 0x45 or c == 0x65 then -- is this e or E?
+				local numexp = match(json, '^[^eE]*[eE][-+]?[0-9]+', pos)
+				if not numexp then
+					break
+				end
+				if num then -- since `0e.*` is always 0.0, ignore those
+					num = numexp
+				end
+				postmp = pos + #numexp
+			end
+
+			pos = postmp
 			if num then
-				pos2 = pos2 + #num
 				num = fixedtonumber(num)
-				if not num then
-					decodeerror('invalid number')
-				end
-				pos = pos2
+			else
+				num = 0.0
 			end
-		end
+			if mns then
+				num = -num
+			end
+			return num
+		until true
 
-		if not mns then
-			return 0.0
-		end
-		return -0.0
+		decodeerror('invalid number')
 	end
 
+	-- `[1-9][0-9]*(\.[0-9]*)?([eE][+-]?[0-9]*)?`
 	local function f_num(mns)
-		pos = pos-1
-		local num = match(json, '^[0-9]+%.?[0-9]*', pos)
-		local c = byte(num, -1)
-		if c == 0x2E then -- check that num is not ended by comma
-			decodeerror('invalid number')
-		end
-
-		local pos2 = pos + #num
-		c = byte(json, pos2)
-		if c == 0x45 or c == 0x65 then -- e or E?
-			num = match(json, '^[^eE]*[eE][-+0-9]*', pos)
-			pos2 = pos + #num
-			num = fixedtonumber(num)
-			if not num then
-				decodeerror('invalid number')
+		repeat
+			pos = pos-1
+			local num = match(json, '^.[0-9]*%.?[0-9]*', pos)
+			if byte(num, -1) == 0x2E then
+				break
 			end
-		else
-			num = fixedtonumber(num)
-		end
-		pos = pos2
+			local postmp = pos + #num
+			local c = byte(json, postmp)
 
-		if mns then
-			num = 0.0-num
-		else
-			num = num-0.0
-		end
-		return num
+			if c == 0x45 or c == 0x65 then -- e or E?
+				num = match(json, '^[^eE]*[eE][-+]?[0-9]+', pos)
+				if not num then
+					break
+				end
+				postmp = pos + #num
+			end
+
+			pos = postmp
+			num = fixedtonumber(num)-0.0
+			if mns then
+				num = -num
+			end
+			return num
+		until true
+
+		decodeerror('invalid number')
 	end
 
+	-- skip minus sign
 	local function f_mns()
 		local c = byte(json, pos)
 		if c then
@@ -8840,55 +9869,61 @@ local function newdecoder()
 		decodeerror('invalid number')
 	end
 
-	-- parse strings
+	--[[
+		Strings
+	--]]
 	local f_str_lib = genstrlib(decodeerror)
-	local f_str_surrogateok = f_str_lib.surrogateok
-	local f_str_subst = f_str_lib.subst
+	local f_str_surrogateok = f_str_lib.surrogateok -- whether codepoints for surrogate pair are correctly paired
+	local f_str_subst = f_str_lib.subst -- the function passed to gsub that interprets escapes
 
-	local f_str_keycache = {}
+	-- caching interpreted keys for speed
+	local f_str_keycache = setmetatable({}, {__mode="v"})
 
 	local function f_str(iskey)
 		local newpos = pos-2
 		local pos2 = pos
 		local c1, c2
 		repeat
-			newpos = find(json, '"', pos2, true)
+			newpos = find(json, '"', pos2, true) -- search '"'
 			if not newpos then
 				decodeerror("unterminated string")
 			end
 			pos2 = newpos+1
-			while true do
+			while true do -- skip preceding '\\'s
 				c1, c2 = byte(json, newpos-2, newpos-1)
 				if c2 ~= 0x5C or c1 ~= 0x5C then
 					break
 				end
 				newpos = newpos-2
 			end
-		until c2 ~= 0x5C
+		until c2 ~= 0x5C -- check '"' is not preceded by '\'
 
 		local str = sub(json, pos, pos2-2)
 		pos = pos2
 
-		if iskey then
+		if iskey then -- check key cache
 			local str2 = f_str_keycache[str]
 			if str2 then
 				return str2
 			end
 		end
 		local str2 = str
-		if find(str2, '\\', 1, true) then
-			str2 = gsub(str2, '\\(.)([^\\]*)', f_str_subst)
+		if find(str2, '\\', 1, true) then -- check if backslash occurs
+			str2 = gsub(str2, '\\(.)([^\\]*)', f_str_subst) -- interpret escapes
 			if not f_str_surrogateok() then
 				decodeerror("invalid surrogate pair")
 			end
 		end
-		if iskey then
+		if iskey then -- commit key cache
 			f_str_keycache[str] = str2
 		end
 		return str2
 	end
 
-	-- parse arrays
+	--[[
+		Arrays, Objects
+	--]]
+	-- array
 	local function f_ary()
 		local ary = {}
 
@@ -8896,17 +9931,17 @@ local function newdecoder()
 		pos = pos+1
 
 		local i = 0
-		if byte(json, pos) ~= 0x5D then
+		if byte(json, pos) ~= 0x5D then -- check closing bracket ']', that consists an empty array
 			local newpos = pos-1
 			repeat
 				i = i+1
-				f = dispatcher[byte(json,newpos+1)]
+				f = dispatcher[byte(json,newpos+1)] -- parse value
 				pos = newpos+2
 				ary[i] = f()
-				f, newpos = find(json, '^[ \n\r\t]*,[ \n\r\t]*', pos)
+				f, newpos = find(json, '^[ \n\r\t]*,[ \n\r\t]*', pos) -- check comma
 			until not newpos
 
-			f, newpos = find(json, '^[ \n\r\t]*%]', pos)
+			f, newpos = find(json, '^[ \n\r\t]*%]', pos) -- check closing bracket
 			if not newpos then
 				decodeerror("no closing bracket of an array")
 			end
@@ -8914,30 +9949,32 @@ local function newdecoder()
 		end
 
 		pos = pos+1
-		if arraylen then
+		if arraylen then -- commit the length of the array if `arraylen` is set
 			ary[0] = i
 		end
 		return ary
 	end
 
-	-- parse objects
+	-- objects
 	local function f_obj()
 		local obj = {}
 
 		f, pos = find(json, '^[ \n\r\t]*', pos)
 		pos = pos+1
-		if byte(json, pos) ~= 0x7D then
+		if byte(json, pos) ~= 0x7D then -- check the closing bracket '}', that consists an empty object
 			local newpos = pos-1
 
 			repeat
 				pos = newpos+1
-				if byte(json, pos) ~= 0x22 then
+				if byte(json, pos) ~= 0x22 then -- check '"'
 					decodeerror("not key")
 				end
 				pos = pos+1
-				local key = f_str(true)
+				local key = f_str(true) -- parse key
 
 				-- optimized for compact json
+				-- c1, c2 == ':', <the first char of the value> or
+				-- c1, c2, c3 == ':', ' ', <the first char of the value>
 				f = f_err
 				do
 					local c1, c2, c3  = byte(json, pos, pos+3)
@@ -8950,13 +9987,13 @@ local function newdecoder()
 						f = dispatcher[c2]
 					end
 				end
-				if f == f_err then
+				if f == f_err then -- read a colon and arbitrary number of spaces
 					f, newpos = find(json, '^[ \n\r\t]*:[ \n\r\t]*', pos)
 					if not newpos then
 						decodeerror("no colon after a key")
 					end
 				end
-				f = dispatcher[byte(json, newpos+1)]
+				f = dispatcher[byte(json, newpos+1)] -- parse value
 				pos = newpos+2
 				obj[key] = f()
 				f, newpos = find(json, '^[ \n\r\t]*,[ \n\r\t]*', pos)
@@ -8973,6 +10010,10 @@ local function newdecoder()
 		return obj
 	end
 
+	--[[
+		The jump table to dispatch a parser for a value, indexed by the code of the value's first char.
+		Nil key means the end of json.
+	--]]
 	dispatcher = {
 		       f_err, f_err, f_err, f_err, f_err, f_err, f_err, f_err, f_err, f_err, f_err, f_err, f_err, f_err, f_err,
 		f_err, f_err, f_err, f_err, f_err, f_err, f_err, f_err, f_err, f_err, f_err, f_err, f_err, f_err, f_err, f_err,
@@ -8984,12 +10025,14 @@ local function newdecoder()
 		f_err, f_err, f_err, f_err, f_tru, f_err, f_err, f_err, f_err, f_err, f_err, f_obj, f_err, f_err, f_err, f_err,
 	}
 	dispatcher[0] = f_err
-	dispatcher.__index = function() -- byte is nil
+	dispatcher.__index = function()
 		decodeerror("unexpected termination")
 	end
 	setmetatable(dispatcher, dispatcher)
 
-	-- run decoder
+	--[[
+		run decoder
+	--]]
 	local function decode(json_, pos_, nullv_, arraylen_)
 		json, pos, nullv, arraylen = json_, pos_, nullv_, arraylen_
 
@@ -9203,23 +10246,12 @@ end
 
 return newencoder
 \]===\]):gsub('\\([%]%[]===)\\([%]%[])','%1%2')
-local newdecoder = require 'lunajson.decoder'
-local newencoder = require 'lunajson.encoder'
-local sax = require 'lunajson.sax'
--- If you have need multiple context of decoder encode,
--- you could require lunajson.decoder or lunajson.encoder directly.
-return {
-	decode = newdecoder(),
-	encode = newencoder(),
-	newparser = sax.newparser,
-	newfileparser = sax.newfileparser,
-}
 local add
 if not pcall(function() add = require"aioruntime".add end) then
-        local loadstring=loadstring; local preload = require"package".preload
+        local loadstring=_G.loadstring or _G.load; local preload = require"package".preload
         add = function(name, rawcode)
 		if not preload[name] then
-		        preload[name] = function(...) return loadstring(rawcode)(...) end
+		        preload[name] = function(...) return assert(loadstring(rawcode), "loadstring: "..name.." failed")(...) end
 		else
 			print("WARNING: overwrite "..name)
 		end
@@ -9227,6 +10259,17 @@ if not pcall(function() add = require"aioruntime".add end) then
 end
 for name, rawcode in pairs(sources) do add(name, rawcode, priorities[name]) end
 end;
+local newdecoder = require 'lunajson.decoder'
+local newencoder = require 'lunajson.encoder'
+local sax = require 'lunajson.sax'
+-- If you need multiple contexts of decoder and/or encoder,
+-- you can require lunajson.decoder and/or lunajson.encoder directly.
+return {
+	decode = newdecoder(),
+	encode = newencoder(),
+	newparser = sax.newparser,
+	newfileparser = sax.newfileparser,
+}
 ]===]):gsub('\\([%]%[]===)\\([%]%[])','%1%2')
 assert(not sources["utf8"])sources["utf8"]=([===[-- <pack utf8> --
 local m = {} -- the module
@@ -10192,6 +11235,177 @@ end
 
 return cli
 ]===]):gsub('\\([%]%[]===)\\([%]%[])','%1%2')
+assert(not sources["alt_getopt"])sources["alt_getopt"]=([===[-- <pack alt_getopt> --
+-- Copyright (c) 2009 Aleksey Cheusov <vle@gmx.net>
+--
+-- Permission is hereby granted, free of charge, to any person obtaining
+-- a copy of this software and associated documentation files (the
+-- "Software"), to deal in the Software without restriction, including
+-- without limitation the rights to use, copy, modify, merge, publish,
+-- distribute, sublicense, and/or sell copies of the Software, and to
+-- permit persons to whom the Software is furnished to do so, subject to
+-- the following conditions:
+--
+-- The above copyright notice and this permission notice shall be
+-- included in all copies or substantial portions of the Software.
+--
+-- THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
+-- EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
+-- MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND
+-- NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE
+-- LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION
+-- OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION
+-- WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+
+local type, pairs, ipairs, io, os = type, pairs, ipairs, io, os
+
+local alt_getopt = {}
+
+local function convert_short2long (opts)
+   local ret = {}
+
+   for short_opt, accept_arg in opts:gmatch("(%w)(:?)") do
+      ret[short_opt]=#accept_arg
+   end
+
+   return ret
+end
+
+local function exit_with_error (msg, exit_status)
+   io.stderr:write (msg)
+   os.exit (exit_status)
+end
+
+local function err_unknown_opt (opt)
+   exit_with_error ("Unknown option `-" ..
+                   (#opt > 1 and "-" or "") .. opt .. "'\n", 1)
+end
+
+local function canonize (options, opt)
+   if not options [opt] then
+      err_unknown_opt (opt)
+   end
+
+   while type (options [opt]) == "string" do
+      opt = options [opt]
+
+      if not options [opt] then
+         err_unknown_opt (opt)
+      end
+   end
+
+   return opt
+end
+
+local function get_ordered_opts (arg, sh_opts, long_opts)
+   local i      = 1
+   local count  = 1
+   local opts   = {}
+   local optarg = {}
+
+   local options = convert_short2long (sh_opts)
+   for k,v in pairs (long_opts) do
+      options [k] = v
+   end
+
+   while i <= #arg do
+      local a = arg [i]
+
+      if a == "--" then
+         i = i + 1
+         break
+
+      elseif a == "-" then
+         break
+
+      elseif a:sub (1, 2) == "--" then
+         local pos = a:find ("=", 1, true)
+
+      if pos then
+         local opt = a:sub (3, pos-1)
+
+         opt = canonize (options, opt)
+
+         if options [opt] == 0 then
+            exit_with_error ("Bad usage of option `" .. a .. "'\n", 1)
+         end
+
+         optarg [count] = a:sub (pos+1)
+         opts [count] = opt
+      else
+         local opt = a:sub (3)
+
+         opt = canonize (options, opt)
+
+         if options [opt] == 0 then
+            opts [count] = opt
+         else
+            if i == #arg then
+               exit_with_error ("Missed value for option `" .. a .. "'\n", 1)
+            end
+
+            optarg [count] = arg [i+1]
+            opts [count] = opt
+            i = i + 1
+         end
+      end
+      count = count + 1
+
+      elseif a:sub (1, 1) == "-" then
+
+         for j=2,a:len () do
+            local opt = canonize (options, a:sub (j, j))
+
+            if options [opt] == 0 then
+               opts [count] = opt
+               count = count + 1
+            elseif a:len () == j then
+               if i == #arg then
+                  exit_with_error ("Missed value for option `-" .. opt .. "'\n", 1)
+               end
+
+               optarg [count] = arg [i+1]
+               opts [count] = opt
+               i = i + 1
+               count = count + 1
+               break
+            else
+               optarg [count] = a:sub (j+1)
+               opts [count] = opt
+               count = count + 1
+               break
+            end
+         end
+      else
+         break
+      end
+
+      i = i + 1
+   end
+
+   return opts,i,optarg
+end
+
+local function get_opts (arg, sh_opts, long_opts)
+   local ret = {}
+
+   local opts,optind,optarg = get_ordered_opts (arg, sh_opts, long_opts)
+   for i,v in ipairs (opts) do
+      if optarg [i] then
+         ret [v] = optarg [i]
+      else
+         ret [v] = 1
+      end
+   end
+
+   return ret,optind
+end
+
+alt_getopt.get_ordered_opts = get_ordered_opts
+alt_getopt.get_opts = get_opts
+
+return alt_getopt
+]===]):gsub('\\([%]%[]===)\\([%]%[])','%1%2')
 assert(not sources["ser"])sources["ser"]=([===[-- <pack ser> --
 local pairs, ipairs, tostring, type, concat, dump, floor, format = pairs, ipairs, tostring, type, table.concat, string.dump, math.floor, string.format
 
@@ -10963,10 +12177,10 @@ return lube
 ]===]):gsub('\\([%]%[]===)\\([%]%[])','%1%2')
 local add
 if not pcall(function() add = require"aioruntime".add end) then
-        local loadstring=loadstring; local preload = require"package".preload
+        local loadstring=_G.loadstring or _G.load; local preload = require"package".preload
         add = function(name, rawcode)
 		if not preload[name] then
-		        preload[name] = function(...) return loadstring(rawcode)(...) end
+		        preload[name] = function(...) return assert(loadstring(rawcode), "loadstring: "..name.." failed")(...) end
 		else
 			print("WARNING: overwrite "..name)
 		end
