@@ -19,6 +19,7 @@ thirdparty/lua-alt-getopt		| ssh://git@github.com/tst2005/lua-alt-getopt.git	| h
 ## parser ##
 thirdparty/lulpeg			| ssh://git@github.com/tst2005/lulpeg.git		| https://github.com/pygy/LuLPeg		|
 thirdparty/lpeglj			| ssh://git@github.com/tst2005/lpeglj.git		| https://github.com/sacek/LPegLJ		|
+thirdparty/lua-fish			| ssh://git@github.com/tst2005/lua-fish.git		| https://github.com/davidm/lua-fish		|
 
 ## featured ##
 thirdparty/lua-featured			| ssh://git@github.com/tst2005/lua-featured.git 	| https://github.com/tst2005/lua-featured	|
