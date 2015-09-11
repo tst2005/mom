@@ -1,5 +1,4 @@
 #!/usr/bin/env lua
-
 _=[[
 	for name in luajit lua5.3 lua-5.3 lua5.2 lua-5.2 lua5.1 lua-5.1 lua; do
 		: ${LUA:="$(command -v "$name")"}
@@ -13,6 +12,10 @@ _=[[
 	exit $?
 ]] and nil
 ---------------- lua code ----------------
+--[[--------------------------------------------------------------------------
+        -- Mom - Featured Lua (All In One Embedding) --
+        -- Copyright (c) 2014-2015 TsT worldmaster.fr <tst2005@gmail.com> --
+--]]--------------------------------------------------------------------------
 --print(_VERSION)
 if not pcall(require, "i") then
 	print("nothing found")
